@@ -175,7 +175,7 @@ class GuardeBotLogger
                     $text .= '<unknown type>';
                     break;
                 default:
-                    $text .= $element;
+                    $text .= ('\'' . str_replace('\'', '\\\'', $element) . '\'' );
                     break;
             }
         }
