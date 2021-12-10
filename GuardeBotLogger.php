@@ -134,7 +134,7 @@ class GuardeBotLogger
         return '';
     }
 
-    private function rt($element, $level = 0, $skipIdent = false)
+    private function rt($element, $level = 0, $skipIndent = false)
     {
         $text = '';
         if($level >= $this->maxDeepLevel)
@@ -142,7 +142,7 @@ class GuardeBotLogger
             return $text;
         }
         
-        if(!$skipIdent)
+        if(!$skipIndent)
         {
             $this->indent($text, $level);
         }
