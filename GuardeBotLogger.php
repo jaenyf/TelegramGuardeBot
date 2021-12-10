@@ -7,7 +7,7 @@
  */
 class GuardeBotLogger
 {
-    private static $self;
+    private static $self = null;
 
     /*
      * The maximum level of deepness;
@@ -21,7 +21,11 @@ class GuardeBotLogger
     public static function log($element)
     {
         try {
-            self::$self = new self();
+            if(!isset(self::$self))
+            {
+                self::$self = new self();
+            }
+            
             $e = new \Exception();
             $message = PHP_EOL;
             $array = '=========[Element]==========';
