@@ -9,6 +9,11 @@ class GuardeBotLogger
 {
     private static $self;
 
+    /*
+     * The maximum level of deepness;
+     */
+    private $maxDeepLevel = 128;
+
     /**
      * Prints the list of parameters from/to Telegram's API endpoint
      * \param $element element as array
@@ -21,11 +26,12 @@ class GuardeBotLogger
             $message = PHP_EOL;
             $array = '=========[Element]==========';
             $array .= "\n";
-            $message = self::$self->rt($element, 'root', true);
+            $message = self::$self->rt($element);
             $backtrace = '============[Trace]===========';
             $backtrace .= "\n";
             $backtrace .= $e->getTraceAsString();
             self::$self->_log_to_file($message . $array . $backtrace);
+            echo $message;
             return $message;
         } catch (\Exception $e) {
             echo $e->getMessage();
@@ -56,23 +62,98 @@ class GuardeBotLogger
         }
     }
 
-    private function rt($element, $title = null, $head = true)
+    private function appendNewLineAndIndent(&$text, $level)
     {
-        $ref = 'ref';
+        $text .= PHP_EOL;
+        $this->indent($text, $level);
+        return $text;
+    }
+
+    private function indent(&$text, $level)
+    {
+        $text .= str_pad('', $level, ' ', STR_PAD_LEFT);
+    }
+
+    private function logArrayOrObject($element, $level, $type)
+    {
         $text = '';
-        if ($head) {
-            $text = "[$ref]";
-            $text .= "\n";
+        
+
+        $keys = [];
+        $values = [];
+        $keysCount = 0;
+        foreach ($element as $key => $value) {
+            array_push($keys, $key);
+            array_push($values, $value);
+            ++$keysCount;
+        }
+
+
+        if($keysCount === 0)
+        {
+            //empty array or object
+            $text .=  $this->getOpeningSeparatorByType($type);
+            $text .= $this->getClosingSeparatorByType($type);
+            $this->appendNewLineAndIndent($text, $level);
+            return $text;
+        }
+
+        $text .=  $this->getOpeningSeparatorByType($type);
+
+        for ($i = 0; $i < $keysCount; $i++) {
+            $key = $keys[$i];
+            $value = $values[$i];
+            $this->appendNewLineAndIndent($text, $level);;
+            $text .= ($this->rt($key, $level +1 ) . ' : ' . self::$self->rt($value, $level +1, true) . ', ');
+        }
+
+        $text = substr($text, 0, -2);
+        $this->appendNewLineAndIndent($text, $level);
+        $text .= $this->getClosingSeparatorByType($type);
+
+        return $text;
+    }
+
+    private function getOpeningSeparatorByType($type)
+    {
+        switch($type)
+        {
+            case 'array' : return '[';
+            case 'object' : return '{';
+        }
+        return '';
+    }
+
+    private function getClosingSeparatorByType($type)
+    {
+        switch($type)
+        {
+            case 'array' : return ']';
+            case 'object' : return '}';
+        }
+        return '';
+    }
+
+    private function rt($element, $level = 0, $skipIdent = false)
+    {
+        $text = '';
+        if($level >= $this->maxDeepLevel)
+        {
+            return $text;
+        }
+        
+        if(!$skipIdent)
+        {
+            $this->indent($text, $level);
         }
         if ($element instanceof CURLFile) {
-            $text .= $ref . ' - CURLFile = File' . PHP_EOL;
+            $text .= ' - CURLFile = File' . PHP_EOL;
         } else {
-            switch (gettype($element)) {
+            $type = gettype($element);
+            switch ( $type) {
                 case 'array':
                 case 'object':
-                    foreach ($element as $key => $value) {
-                        $text .= '[' . $key . '] => ' . self::$self->rt($value) . PHP_EOL . PHP_EOL;
-                    }
+                    $text .= $this->logArrayOrObject($element, $level,  $type);
                     break;
                 case 'boolean':
                     $text .= $element ? 'true' : 'false';
