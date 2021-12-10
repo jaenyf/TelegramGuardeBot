@@ -134,9 +134,7 @@ class GuardeBot
 	 */
 	public function processUpdate($update)
 	{
-		$this->log('processUpdate:'); 
 		$this->log($update);
-
 		return true;
 	}
 }
