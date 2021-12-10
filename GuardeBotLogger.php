@@ -28,13 +28,14 @@ class GuardeBotLogger
             
             $e = new \Exception();
             $message = PHP_EOL;
-            $array = '=========[Element]==========';
-            $array .= "\n";
-            $message = self::$self->rt($element);
-            $backtrace = '============[Trace]===========';
-            $backtrace .= "\n";
-            $backtrace .= $e->getTraceAsString();
-            self::$self->_log_to_file($message . $array . $backtrace);
+            $message .= '=========[Element]=========';
+            $message .= PHP_EOL;
+            $message .= self::$self->rt($element);
+            $message .= PHP_EOL;
+            $message .= '=========[Trace]============';
+            $message .= PHP_EOL;
+            $message .= $e->getTraceAsString();
+            self::$self->_log_to_file($message);
             echo $message;
             return $message;
         } catch (\Exception $e) {
