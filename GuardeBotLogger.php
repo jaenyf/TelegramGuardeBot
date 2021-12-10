@@ -20,7 +20,8 @@ class GuardeBotLogger
      */
     public static function log($element)
     {
-        try {
+        try
+        {
             if(!isset(self::$self))
             {
                 self::$self = new self();
@@ -38,7 +39,9 @@ class GuardeBotLogger
             self::$self->_log_to_file($message);
             echo $message;
             return $message;
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e)
+        {
             echo $e->getMessage();
         }
     }
