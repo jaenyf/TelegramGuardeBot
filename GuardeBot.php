@@ -92,7 +92,8 @@ class GuardeBot
 		{
 			throw new Exception('Failed to delete web hook');
 		}
-		if(file_exists(self::WEBHOOK_LOCK_FILENAME)){
+		if(file_exists(self::WEBHOOK_LOCK_FILENAME))
+		{
 			$hookFilePointer = fopen(self::WEBHOOK_LOCK_FILENAME, 'w+'); 
 			fclose($$hookFilePointer);
 			unlink($$hookFilePointer);
@@ -115,9 +116,9 @@ class GuardeBot
 			return;
 		}
 		
-		if (class_exists('GuardeBotLogger')) {
+		if (class_exists('GuardeBotLogger'))
+		{
 			$elementText = GuardeBotLogger::log($element);
-			echo($elementText .'<br/>');
 			$this->telegram->sendMessage(
 				array(
 					'chat_id' => $this->logChatId,
