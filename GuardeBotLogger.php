@@ -158,6 +158,10 @@ class GuardeBotLogger
                 case 'boolean':
                     $text .= $element ? 'true' : 'false';
                     break;
+                case 'double':
+                case 'integer':
+                    $text .= $element;
+                    break;
                 case 'NULL':
                     $text .= 'NULL';
                     break;
