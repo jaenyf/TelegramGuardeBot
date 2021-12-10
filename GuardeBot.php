@@ -83,7 +83,7 @@ class GuardeBot
 		//create the hook lock file as all went well:
 		fclose(fopen($hookFileName, "w"));
 		
-		$this->log('web hook set for '.$url.'<br/>');
+		$this->log('web hook set');
 	}
 
 	public function unHook()
@@ -97,7 +97,7 @@ class GuardeBot
 			fclose($$hookFilePointer);
 			unlink($$hookFilePointer);
 		}
-		$this->log('web hook deleted<br/>');
+		$this->log('web hook deleted');
 	}
 
 	public function setLogChatId($logChatId)
@@ -116,16 +116,14 @@ class GuardeBot
 		}
 		
 		if (class_exists('GuardeBotLogger')) {
-			GuardeBotLogger::log($element);
+			$elementText = GuardeBotLogger::log($element);
+			echo($elementText .'<br/>');
+			$this->telegram->sendMessage(
+				array(
+					'chat_id' => $this->logChatId,
+					'text' => $elementText)
+			);
 		}
-        
-		$elementText = var_export($element, true);
-		echo($elementText .'<br/>');
-		$this->telegram->sendMessage(
-			array(
-				'chat_id' => $this->logChatId,
-				'text' => $elementText)
-		);
 	}
 	
 
@@ -133,14 +131,11 @@ class GuardeBot
 	 * Process the updates received by the web hook
 	 * \param $updates the updates in json format
 	 */
-	public function processUpdates($updates)
+	public function processUpdate($update)
 	{
-		 $this->log($updates);
-		 foreach($updates as $key => $value)
-		 {
-			 $this->log("processing web hook update key: ".var_export($key, true).' with value: '.var_export($value, true));
-		 }
-		
+		$this->log('processUpdate:'); 
+		$this->log($update);
+
 		return true;
 	}
 }
