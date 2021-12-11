@@ -42,7 +42,7 @@ class GuardeBotLogger
             $message .= PHP_EOL;
             $message .= $e->getTraceAsString();
             self::$self->_log_to_file($message);
-            echo $message;
+            echo str_replace(' ', '&nbsp;', str_replace(PHP_EOL, '<br/>', $message));
             return $message;
         }
         catch (\Exception $e)
