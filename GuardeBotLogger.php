@@ -18,7 +18,7 @@ class GuardeBotLogger
      * Prints the list of parameters from/to Telegram's API endpoint
      * \param $element element as array
      */
-    public static function log($element)
+    public static function log($element, $title=null)
     {
         try
         {
@@ -30,6 +30,11 @@ class GuardeBotLogger
             $e = new \Exception();
             $message = PHP_EOL;
             $message .= '=========[Element]=========';
+            if(!empty($title))
+            {
+                $message .= PHP_EOL;
+                $message .= '### ' . $title. ' ###';
+            }
             $message .= PHP_EOL;
             $message .= self::$self->rt($element);
             $message .= PHP_EOL;
