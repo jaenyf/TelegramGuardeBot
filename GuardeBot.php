@@ -109,7 +109,7 @@ class GuardeBot
 	/**
 	 * Log to file and telegram test group
 	 */
-	public function log($element)
+	public function log($element, $title=null)
 	{
 		if(!$this->logEnabled)
 		{
@@ -118,7 +118,7 @@ class GuardeBot
 		
 		if (class_exists('GuardeBotLogger'))
 		{
-			$elementText = GuardeBotLogger::log($element);
+			$elementText = GuardeBotLogger::log($element, $title);
 			$this->telegram->sendMessage(
 				array(
 					'chat_id' => $this->logChatId,
