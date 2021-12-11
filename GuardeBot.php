@@ -77,7 +77,7 @@ class GuardeBot
 		{
 			return false;
 		}
-		return empty($hookInfo->url);
+		return !empty($hookInfo->url);
 	}
 
 	public function hook($url, $certificate = '')
