@@ -69,28 +69,50 @@ class GuardeBot
 		return basename($baseFilename, '.'.$baseFilenameExt) . '_' . $this->chatUniqueName . '.' . $baseFilenameExt;
 	}
 
+	public function isHooked()
+	{
+		$hookInfo = $this->telegram->getWebhookInfo();
+		$this->log($hookInfo, 'hookInfo:');
+		if(!isset($hookInfo))
+		{
+			return false;
+		}
+		return empty($hookInfo->url);
+	}
+
 	public function hook($url, $certificate = '')
 	{
 		$hookFileName = $this->deriveUniqueChatFilename(self::WEBHOOK_LOCK_FILENAME);
 		if(file_exists($hookFileName)){
 			return;
 		}
-		if(!$this->telegram->setWebhook($url, $certificate))
-		{
-			throw new Exception('Failed to set web hook');
-		}
 
-		//create the hook lock file as all went well:
-		fclose(fopen($hookFileName, "w"));
-		
-		$this->log('web hook set');
+		if(!$this->isHooked())
+		{
+			if(!$this->telegram->setWebhook($url, $certificate))
+			{
+				throw new Exception('Failed to set web hook');
+			}
+			
+			//create the hook lock file as all went well:
+			fclose(fopen($hookFileName, "w"));
+			
+			$this->log('web hook set');
+		}
+		else
+		{
+			$this->log('web hook already set');
+		}
 	}
 
 	public function unHook()
 	{
-		if(!$this->telegram->deleteWebhook())
+		if($this->isHooked())
 		{
-			throw new Exception('Failed to delete web hook');
+			if(!$this->telegram->deleteWebhook())
+			{
+				throw new Exception('Failed to delete web hook');
+			}
 		}
 		if(file_exists(self::WEBHOOK_LOCK_FILENAME))
 		{
