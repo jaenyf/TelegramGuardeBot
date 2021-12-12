@@ -107,7 +107,7 @@ class GuardeBot
 		return !empty($hookInfo->url);
 	}
 
-	public function hook($url, $certificate = '')
+	public function hook($url, $certificate = '', $dropPendingUpdates = false)
 	{
 		$hookFileName = $this->deriveUniqueChatFilename(self::WEBHOOK_LOCK_FILENAME);
 		if(file_exists($hookFileName)){
@@ -116,7 +116,7 @@ class GuardeBot
 
 		if(!$this->isHooked())
 		{
-			if(!$this->telegram->setWebhook($url, $certificate))
+			if(!$this->telegram->setWebhook($url, $certificate, $dropPendingUpdates))
 			{
 				throw new Exception('Failed to set web hook');
 			}
@@ -132,11 +132,11 @@ class GuardeBot
 		}
 	}
 
-	public function unHook()
+	public function unHook($dropPendingUpdates = false)
 	{
 		if($this->isHooked())
 		{
-			if(!$this->telegram->deleteWebhook())
+			if(!$this->telegram->deleteWebhook($dropPendingUpdates))
 			{
 				throw new Exception('Failed to delete web hook');
 			}
