@@ -69,6 +69,33 @@ class GuardeBot
 		return basename($baseFilename, '.'.$baseFilenameExt) . '_' . $this->chatUniqueName . '.' . $baseFilenameExt;
 	}
 
+	/**
+	 * returns a 2-elements array with the update id and the update date
+	 */
+	private function getLastHandledUpdateInfo()
+	{
+		$hookFileName = $this->deriveUniqueChatFilename(self::WEBHOOK_LOCK_FILENAME);
+		$file = fopen($hookFileName, "r");
+		$result = fgetcsv($file);
+		if($result === false)
+		{
+			$result = ['0','0'];
+		}
+		fclose($file);
+		return $result;
+	}
+
+	/**
+	 * returns a 2-elements array with the update id and the update date
+	 */
+	private function setLastHandledUpdateInfo($updateId, $updateDate)
+	{
+		$hookFileName = $this->deriveUniqueChatFilename(self::WEBHOOK_LOCK_FILENAME);
+		$file = fopen($hookFileName, "w");
+		fputcsv($file, [$updateId, $updateDate]);
+		fclose($file);
+	}
+
 	public function isHooked()
 	{
 		$hookInfo = $this->telegram->getWebhookInfo();
@@ -156,7 +183,17 @@ class GuardeBot
 	 */
 	public function processUpdate($update)
 	{
+		$updateId = $update->update_id;
+		$updateInfo = $this->getLastHandledUpdateInfo();
+		if($updateId == $updateInfo[0])
+		{
+			//this update has already been processed
+			return;
+		}
+
 		$this->log($update);
+
+		$this->setLastHandledUpdateInfo($updateId, time());
 		return true;
 	}
 }
