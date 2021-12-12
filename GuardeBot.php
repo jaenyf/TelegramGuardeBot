@@ -191,6 +191,16 @@ class GuardeBot
 			return;
 		}
 
+		if(
+			isset($update->message)
+			&& isset($update->message->chat)
+			&& isset($update->message->chat->id)
+			&& $update->message->chat->id == $this->logChatId)
+		{
+			//ignore updates from the debug log group
+			return;
+		}
+
 		$this->log($update);
 
 		$this->setLastHandledUpdateInfo($updateId, time());
