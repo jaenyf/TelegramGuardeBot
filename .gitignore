@@ -4,3 +4,7 @@ testbot.php
 test.php
 
 vendor/
+
+*.dat
+
+*.bck
