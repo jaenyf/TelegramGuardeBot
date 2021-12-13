@@ -1,8 +1,11 @@
 <?php
 
+namespace TelegramGuardeBot;
+
+use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
+use TelegramGuardeBot\GuardeBotLogger;
+
 require_once('Telegram.php');
-require_once('i18n/GuardeBotMessagesBase.php');
-require_once('GuardeBotLogger.php');
 
 /**
  * GuardeBot Class.
@@ -45,12 +48,12 @@ class GuardeBot
     {
 		$this->chatUniqueName = trim(isset($chat_unique_name) ? $chat_unique_name : '');
 		if($this->chatUniqueName === ''){
-			throw new Exception('Chat unique name has to be defined');
+			throw new \Exception('Chat unique name has to be defined');
 		}
 		$this->blacklistFilename = $this->deriveUniqueChatFilename($blacklistFilename);
 		$this->loadBlacklist();
 		$this->logEnabled = $logEnabled;
-		$this->telegram = new Telegram($bot_token, $logEnabled, $proxy);
+		$this->telegram = new \Telegram($bot_token, $logEnabled, $proxy);
     }
 
 	private function loadBlacklist()
@@ -118,7 +121,7 @@ class GuardeBot
 		{
 			if(!$this->telegram->setWebhook($url, $certificate, $dropPendingUpdates))
 			{
-				throw new Exception('Failed to set web hook');
+				throw new \Exception('Failed to set web hook');
 			}
 			
 			//create the hook lock file as all went well:
@@ -138,7 +141,7 @@ class GuardeBot
 		{
 			if(!$this->telegram->deleteWebhook($dropPendingUpdates))
 			{
-				throw new Exception('Failed to delete web hook');
+				throw new \Exception('Failed to delete web hook');
 			}
 		}
 		if(file_exists(self::WEBHOOK_LOCK_FILENAME))
@@ -164,16 +167,14 @@ class GuardeBot
 		{
 			return;
 		}
-		
-		if (class_exists('GuardeBotLogger'))
-		{
-			$elementText = GuardeBotLogger::log($element, $title);
-			$this->telegram->sendMessage(
-				array(
-					'chat_id' => $this->logChatId,
-					'text' => $elementText)
-			);
-		}
+
+		$elementText = GuardeBotLogger::log($element, $title);
+		echo $elementText;
+		$this->telegram->sendMessage(
+			array(
+				'chat_id' => $this->logChatId,
+				'text' => $elementText)
+		);
 	}
 	
 

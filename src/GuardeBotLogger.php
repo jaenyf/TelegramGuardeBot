@@ -1,5 +1,7 @@
 <?php
 
+namespace TelegramGuardeBot;
+
 /**
  * GuardeBot Logger Class.
  *
@@ -24,7 +26,7 @@ class GuardeBotLogger
         {
             if(!isset(self::$self))
             {
-                self::$self = new self();
+                self::$self = new GuardeBotLogger();
             }
             
             $e = new \Exception();
@@ -41,7 +43,7 @@ class GuardeBotLogger
             $message .= '=========[Trace]============';
             $message .= PHP_EOL;
             $message .= $e->getTraceAsString();
-            self::$self->_log_to_file($message);
+            self::_log_to_file($message);
             echo str_replace(' ', '&nbsp;', str_replace(PHP_EOL, '<br/>', $message));
             return $message;
         }
@@ -56,7 +58,7 @@ class GuardeBotLogger
      * Write a string in the log file GuardeBotLogger.txt adding the current server time
      * \param $text the text to append in the log.
      */
-    private function _log_to_file($text)
+    private static function _log_to_file($text)
     {
         try {
             $dir_name = 'logs';
@@ -159,7 +161,7 @@ class GuardeBotLogger
         {
             $this->indent($text, $level);
         }
-        if ($element instanceof CURLFile) {
+        if ($element instanceof \CURLFile) {
             $text .= ' - CURLFile = File' . PHP_EOL;
         } else {
             $type = gettype($element);
