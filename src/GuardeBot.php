@@ -4,6 +4,7 @@ namespace TelegramGuardeBot;
 
 use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
 use TelegramGuardeBot\GuardeBotLogger;
+use TelegramGuardeBot\Validators\MlSpamTextValidator;
 
 require_once('Telegram.php');
 
@@ -199,12 +200,26 @@ class GuardeBot
 			&& $update->message->chat->id == $this->logChatId)
 		{
 			//ignore updates from the debug log group
-			return;
+			return true;
 		}
 
-		$this->log($update);
+		try
+		{
+			if(isset($update->message) && !empty($update->message->text))
+			{
+					$message = $update->message->text;
+					$spamValidator = new MlSpamTextValidator();
+					$isValid = $spamValidator->validate($message);
+					$this->log($isValid, 'Message validity for : \"'.$message.'\"');
+			}
 
-		$this->setLastHandledUpdateInfo($updateId, time());
-		return true;
+			$this->setLastHandledUpdateInfo($updateId, time());
+			return true;
+		}
+		catch(\Exception $e)
+		{
+			$this->log($e, 'processUpdate - exception');
+			return false;
+		}
 	}
 }
