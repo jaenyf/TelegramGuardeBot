@@ -12,7 +12,9 @@ class GuardeBotMessages extends GuardeBotMessagesBase
 	{
 		parent::__construct();
 		$this->messages = array(
-			self::SAY_WEBHOOK_SET_UP => 'Web hook set up !'
+			self::SAY_WEBHOOK_SET_UP => 'Web hook set up !',
+			self::CMD_HEADER => 'Guarde',
+			self::CMD_MARK_AS_SPAM => 'This is a spam'
 		);
 	}
 }

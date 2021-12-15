@@ -3,8 +3,10 @@
 namespace TelegramGuardeBot;
 
 use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
+use TelegramGuardeBot\i18n\GuardeBotMessages;
 use TelegramGuardeBot\GuardeBotLogger;
 use TelegramGuardeBot\Validators\MlSpamTextValidator;
+use TelegramGuardeBot\Learners\MlSpamTextLearner;
 
 require_once('Telegram.php');
 
@@ -207,19 +209,97 @@ class GuardeBot
 		{
 			if(isset($update->message) && !empty($update->message->text))
 			{
-					$message = $update->message->text;
-					$spamValidator = new MlSpamTextValidator();
-					$isValid = $spamValidator->validate($message);
-					$this->log($isValid, 'Message validity for : \"'.$message.'\"');
+				//handle update message
+				$this->processUpdateMessage($update);
 			}
 
 			$this->setLastHandledUpdateInfo($updateId, time());
 			return true;
 		}
-		catch(\Exception $e)
+		catch(\Throwable $e)
 		{
 			$this->log($e, 'processUpdate - exception');
 			return false;
 		}
+	}
+
+	/**
+	 * Handle update message and act based upon it
+	 * \param $update the telegram update
+	 */
+	private function processUpdateMessage($update)
+	{
+		$message = $update->message->text;
+		$spamValidator = new MlSpamTextValidator();
+		$isValid = $spamValidator->validate($message);
+		if(!$isValid)
+		{
+			//this is a spam
+			//TODO: handle spam
+		}
+		else
+		{
+			$commandText = '';
+			if($this->isCommand($message, $commandText))
+			{
+				$this->processCommand($commandText, $update);
+			}
+		}
+	}
+
+	/**
+	 * Whether or not the given text is a command
+	 * \param $text the text to analyse
+	 * \param $commandText the extracted command text
+	 */
+	private function isCommand($text, &$commandText) : bool
+	{
+		$commandHeader = GuardeBotMessagesBase::getInstance()->get(GuardeBotMessagesBase::CMD_HEADER);
+		$matches = [];
+		if(preg_match(
+			'/^(?i)('.$commandHeader.')\s*[!]*\s*[,;-]{0,1}\s*([\w\s]+)\s*[!]*\s*/',
+			$text,
+			$matches
+		))
+		{
+			$commandText = rtrim($matches[2]);
+			return true;
+		}
+		return false;
+	}
+
+	private function processCommand($commandText, $update)
+	{
+		$loweredCommandText = strtolower($commandText);
+		switch($loweredCommandText)
+		{
+			case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::CMD_MARK_AS_SPAM):
+				//the behavior here is to considere this command is in a reply of the message to mark as spam
+				$replyToMessageText = '';
+				if($this->tryGetReplyToMessageText($update, $replyToMessageText))
+				{
+					$learner = new MlSpamTextLearner();
+					$learner->learn($replyToMessageText, false);
+					$this->log($replyToMessageText, 'marked as spam !');
+				}
+				
+				break;
+			default:
+				$this->log('unrecognized command : '.$commandText);
+				break;
+		}
+	}
+
+	private function tryGetReplyToMessageText($update, &$message) : bool
+	{
+		if(
+			isset($update->message)
+			&& isset($update->message->reply_to_message)
+			&& !empty($update->message->reply_to_message->text))
+		{
+			$message = $update->message->reply_to_message->text;
+			return true;
+		}
+		return false;
 	}
 }
