@@ -7,6 +7,7 @@ use TelegramGuardeBot\i18n\GuardeBotMessages;
 use TelegramGuardeBot\GuardeBotLogger;
 use TelegramGuardeBot\Validators\MlSpamTextValidator;
 use TelegramGuardeBot\Learners\MlSpamTextLearner;
+use TelegramGuardeBot\Managers\Spams\SpamAuthorsManager;
 
 require_once('Telegram.php');
 
@@ -173,10 +174,15 @@ class GuardeBot
 
 		$elementText = GuardeBotLogger::log($element, $title);
 		echo $elementText;
+		$this->say($this->logChatId, $elementText);
+	}
+
+	private function say($chatId, $message)
+	{
 		$this->telegram->sendMessage(
 			array(
-				'chat_id' => $this->logChatId,
-				'text' => $elementText)
+				'chat_id' => $chatId,
+				'text' => $message)
 		);
 	}
 	
@@ -195,14 +201,15 @@ class GuardeBot
 			return;
 		}
 
-		if(
-			isset($update->message)
-			&& isset($update->message->chat)
-			&& isset($update->message->chat->id)
-			&& $update->message->chat->id == $this->logChatId)
+		$messageChatId = null;
+
+		if($this->tryGetMessageChatId($update, $messageChatId))
 		{
-			//ignore updates from the debug log group
-			return true;
+			if($messageChatId == $this->logChatId)
+			{
+				//ignore updates from the debug log group
+				return true;
+			}
 		}
 
 		try
@@ -288,10 +295,72 @@ class GuardeBot
 				}
 				
 				break;
+			case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::CMD_BAN_MESSAGE_AUTHOR):
+				//the behavior here is to considere this command is in a reply of the message to mark the author as spammer
+				$messageAuthorInfo = null;
+				if($this->tryGetMessageAuthorInfo($update, $messageAuthorInfo))
+				{
+					$spamAuthorsManager = new SpamAuthorsManager();
+					$spamAuthorsManager->addGlobal($messageAuthorInfo->userId, $messageAuthorInfo->userName, $messageAuthorInfo->firstName, $messageAuthorInfo->lastName);
+					$messageChatId = null;
+					if($this->tryGetMessageChatId($update, $messageChatId))
+					{
+						if($this->telegram->banChatMember(['chat_id' => $messageChatId, 'user_id' => $messageAuthorInfo->userId, 'until_date' => 0, 'revoke_messages' => true]))
+						{
+							$authorDisplayName = $this->getBestMessageAuthorDisplayName($messageAuthorInfo);
+							$this->say($messageChatId, GuardeBotMessagesBase::get(GuardeBotMessagesBase::ACK_BAN_MESSAGE_AUTHOR, [$authorDisplayName]));
+						}
+					}
+					$this->log($spamAuthorsManager, 'Author marked as spammer !');
+				}
+				break;
 			default:
 				$this->log('unrecognized command : '.$commandText);
 				break;
 		}
+	}
+
+	private function getBestMessageAuthorDisplayName($messageAuthorInfo)
+	{
+		$displayName = '';
+
+		if(!empty($messageAuthorInfo->firstName))
+		{
+			$displayName .= $messageAuthorInfo->firstName;
+		}
+
+		if(!empty($messageAuthorInfo->lastName))
+		{
+			if(!empty($displayName))
+			{
+				$displayName .= ' ';
+			}
+			$displayName .= $messageAuthorInfo->lastName;
+		}
+
+		if(!empty($messageAuthorInfo->userName))
+		{
+			if(!empty($displayName))
+			{
+				$displayName .= ' ';
+			}
+			$displayName .= ('(@'.$messageAuthorInfo->userName.')');
+		}
+
+		return $displayName;
+	}
+
+	private function tryGetMessageChatId($update, &$chatId) : bool
+	{
+		if(
+			isset($update->message)
+			&& isset($update->message->chat)
+			&& isset($update->message->chat->id))
+		{
+			$chatId = $update->message->chat->id;
+			return true;
+		}
+		return false;
 	}
 
 	private function tryGetReplyToMessageText($update, &$message) : bool
@@ -302,6 +371,37 @@ class GuardeBot
 			&& !empty($update->message->reply_to_message->text))
 		{
 			$message = $update->message->reply_to_message->text;
+			return true;
+		}
+		return false;
+	}
+
+	private function tryGetMessageAuthorInfo($update, &$messageAuthorInfo)
+	{
+		if(
+			isset($update->message)
+			&& isset($update->message->reply_to_message))
+		{
+			$from = null;
+			if(isset($update->message->reply_to_message->forward_from))
+			{
+				$from = $update->message->reply_to_message->forward_from;
+			}
+			else
+			{
+				$from = $update->message->reply_to_message->from;
+			}
+
+			if(isset($from))
+			{
+				$messageAuthorInfo = (object)[
+					'userId' => $from->id,
+					'userName' => !empty($from->username) ? $from->username : '',
+					'firstName' => !empty($from->first_name) ? $from->first_name : '',
+					'lastName' => !empty($from->last_name) ? $from->last_name : ''
+				];
+			}
+
 			return true;
 		}
 		return false;
