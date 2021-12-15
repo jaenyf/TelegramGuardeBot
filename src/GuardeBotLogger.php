@@ -65,7 +65,7 @@ class GuardeBotLogger
             if (!is_dir($dir_name)) {
                 mkdir($dir_name);
             }
-            $fileName = $dir_name . '/' . __CLASS__ . '-' . date('Y-m-d') . '.txt';
+            $fileName = $dir_name . '/' . 'GuardeBot' . '-' . date('Y-m-d') . '.txt';
             $myFile = fopen($fileName, 'a+');
             $date = '============[Date]============';
             $date .= "\n";
