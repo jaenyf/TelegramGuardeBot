@@ -89,6 +89,34 @@ class GuardeBotLogger
         $text .= str_pad('', $level, ' ', STR_PAD_LEFT);
     }
 
+    private function logThrowable($element, $level)
+    {
+        $text = '';
+        $text .= $this->getOpeningSeparatorByType('object');
+        $this->appendNewLineAndIndent($text, $level);
+        $text .= ('Message : ' . self::$self->rt($element->getMessage(), $level +1, true) . ', ');
+        $this->appendNewLineAndIndent($text, $level);
+        $text .= ('Code : ' . self::$self->rt($element->getCode(), $level +1, true) . ', ');
+        $this->appendNewLineAndIndent($text, $level);
+        $text .= ('File : ' . self::$self->rt($element->getFile(), $level +1, true) . ', ');
+        $this->appendNewLineAndIndent($text, $level);
+        $text .= ('Line : ' . self::$self->rt($element->getLine(), $level +1, true) . ', ');
+        $this->appendNewLineAndIndent($text, $level);
+        $text .= ('Trace : ' . self::$self->rt($element->getTrace(), $level +1, true) . ', ');
+        $previous = $element->getPrevious();
+        if(isset($previous))
+        {
+            $this->appendNewLineAndIndent($text, $level);
+            $text .= ('Previous : ' . self::$self->logThrowable($previous, $level +1, true) . ', ');
+        }
+
+        $text = substr($text, 0, -2);
+        $this->appendNewLineAndIndent($text, $level);
+        $text .= $this->getClosingSeparatorByType('object');
+
+        return $text;
+    }
+
     private function logArrayOrObject($element, $level, $type)
     {
         $text = '';
@@ -107,13 +135,13 @@ class GuardeBotLogger
         if($keysCount === 0)
         {
             //empty array or object
-            $text .=  $this->getOpeningSeparatorByType($type);
+            $text .= $this->getOpeningSeparatorByType($type);
             $text .= $this->getClosingSeparatorByType($type);
             $this->appendNewLineAndIndent($text, $level);
             return $text;
         }
 
-        $text .=  $this->getOpeningSeparatorByType($type);
+        $text .= $this->getOpeningSeparatorByType($type);
 
         for ($i = 0; $i < $keysCount; $i++) {
             $key = $keys[$i];
@@ -161,9 +189,19 @@ class GuardeBotLogger
         {
             $this->indent($text, $level);
         }
-        if ($element instanceof \CURLFile) {
+        if ($element instanceof \CURLFile)
+        {
             $text .= ' - CURLFile = File' . PHP_EOL;
-        } else {
+        }
+        else if ($element instanceof \Throwable)
+        {
+            $text .= $this->logThrowable($element, $level);
+        }
+        else if ($element instanceof \Exception)
+        {
+            $text .= $this->logThrowable($element, $level);
+        }
+        else {
             $type = gettype($element);
             switch ( $type) {
                 case 'array':

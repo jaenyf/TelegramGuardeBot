@@ -221,6 +221,10 @@ class GuardeBot
 			$this->log($e, 'processUpdate - exception');
 			return false;
 		}
+		catch (\Exception $e) {
+			$this->log($e, 'processUpdate - exception');
+			return false;
+		}
 	}
 
 	/**
