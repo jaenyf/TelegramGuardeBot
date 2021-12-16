@@ -3,7 +3,6 @@
 namespace TelegramGuardeBot;
 
 use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
-use TelegramGuardeBot\i18n\GuardeBotMessages;
 use TelegramGuardeBot\GuardeBotLogger;
 use TelegramGuardeBot\Validators\MlSpamTextValidator;
 use TelegramGuardeBot\Learners\MlSpamTextLearner;
@@ -19,19 +18,12 @@ require_once('Telegram.php');
 class GuardeBot
 {
 	/**
-     * Constant for the blacklist file name.
-     */
-	const BLACKLIST_FILENAME = 'blacklist.lst';
-
-	/**
      * Constant for the webhook lock file name.
      */
 	const WEBHOOK_LOCK_FILENAME = 'guardebot.lock';
 
 	private $telegram = null;
-	private $chatUniqueName = null;
-	private $blacklistFilename = null;
-	private $blacklist = null;
+	private $webHookUniqueName = null;
 	private $logEnabled = true;
 	private $logChatId = null;
 
@@ -44,36 +36,23 @@ class GuardeBot
      */
     public function __construct(
 		$bot_token,
-		$chat_unique_name,
-		$blacklistFilename = self::BLACKLIST_FILENAME,
+		$webHookUniqueName,
 		$logEnabled = true,
 		array $proxy = []
 	)
     {
-		$this->chatUniqueName = trim(isset($chat_unique_name) ? $chat_unique_name : '');
-		if($this->chatUniqueName === ''){
-			throw new \Exception('Chat unique name has to be defined');
+		$this->webHookUniqueName = trim(isset($webHookUniqueName) ? $webHookUniqueName : '');
+		if($this->webHookUniqueName === ''){
+			throw new \Exception('WebHook unique name has to be defined');
 		}
-		$this->blacklistFilename = $this->deriveUniqueChatFilename($blacklistFilename);
-		$this->loadBlacklist();
 		$this->logEnabled = $logEnabled;
 		$this->telegram = new \Telegram($bot_token, $logEnabled, $proxy);
     }
 
-	private function loadBlacklist()
-	{
-		//create the blacklist file if necessary:
-		if(!file_exists($this->blacklistFilename)){
-			fclose(fopen($this->blacklistFilename, "w"));
-		}
-		//load the blacklist file
-		$this->blacklist = file($this->blacklistFilename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-	}
-
-	private function deriveUniqueChatFilename($baseFilename)
+	private function deriveWebHookUniqueFilename($baseFilename)
 	{
 		$baseFilenameExt = pathinfo($baseFilename, PATHINFO_EXTENSION);
-		return basename($baseFilename, '.'.$baseFilenameExt) . '_' . $this->chatUniqueName . '.' . $baseFilenameExt;
+		return basename($baseFilename, '.'.$baseFilenameExt) . '-' . $this->webHookUniqueName . '.' . $baseFilenameExt;
 	}
 
 	/**
@@ -81,7 +60,7 @@ class GuardeBot
 	 */
 	private function getLastHandledUpdateInfo()
 	{
-		$hookFileName = $this->deriveUniqueChatFilename(self::WEBHOOK_LOCK_FILENAME);
+		$hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
 		$file = fopen($hookFileName, "r");
 		$result = fgetcsv($file);
 		if($result === false)
@@ -97,7 +76,7 @@ class GuardeBot
 	 */
 	private function setLastHandledUpdateInfo($updateId, $updateDate)
 	{
-		$hookFileName = $this->deriveUniqueChatFilename(self::WEBHOOK_LOCK_FILENAME);
+		$hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
 		$file = fopen($hookFileName, "w");
 		fputcsv($file, [$updateId, $updateDate]);
 		fclose($file);
@@ -116,7 +95,7 @@ class GuardeBot
 
 	public function hook($url, $certificate = '', $dropPendingUpdates = false)
 	{
-		$hookFileName = $this->deriveUniqueChatFilename(self::WEBHOOK_LOCK_FILENAME);
+		$hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
 		if(file_exists($hookFileName)){
 			return;
 		}
@@ -173,8 +152,10 @@ class GuardeBot
 		}
 
 		$elementText = GuardeBotLogger::log($element, $title);
-		echo $elementText;
-		$this->say($this->logChatId, $elementText);
+		if(isset($this->logChatId))
+		{
+			$this->say($this->logChatId, $elementText);
+		}
 	}
 
 	private function say($chatId, $message)

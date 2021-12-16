@@ -22,35 +22,27 @@ class GuardeBotLogger
      */
     public static function log($element, $title=null)
     {
-        try
+        if(!isset(self::$self))
         {
-            if(!isset(self::$self))
-            {
-                self::$self = new GuardeBotLogger();
-            }
-            
-            $e = new \Exception();
-            $message = PHP_EOL;
-            $message .= '=========[Element]=========';
-            if(!empty($title))
-            {
-                $message .= PHP_EOL;
-                $message .= '### ' . $title. ' ###';
-            }
-            $message .= PHP_EOL;
-            $message .= self::$self->rt($element);
-            $message .= PHP_EOL;
-            $message .= '=========[Trace]============';
-            $message .= PHP_EOL;
-            $message .= $e->getTraceAsString();
-            self::_log_to_file($message);
-            echo str_replace(' ', '&nbsp;', str_replace(PHP_EOL, '<br/>', $message));
-            return $message;
+            self::$self = new GuardeBotLogger();
         }
-        catch (\Exception $e)
+        
+        $e = new \Exception();
+        $message = PHP_EOL;
+        $message .= '=========[Element]=========';
+        if(!empty($title))
         {
-            echo $e->getMessage();
+            $message .= PHP_EOL;
+            $message .= '### ' . $title. ' ###';
         }
+        $message .= PHP_EOL;
+        $message .= self::$self->rt($element);
+        $message .= PHP_EOL;
+        $message .= '=========[Trace]============';
+        $message .= PHP_EOL;
+        $message .= $e->getTraceAsString();
+        self::_log_to_file($message);
+        return $message;
     }
 
     /// Write a string in the log file adding the current server time
@@ -60,21 +52,17 @@ class GuardeBotLogger
      */
     private static function _log_to_file($text)
     {
-        try {
-            $dir_name = 'logs';
-            if (!is_dir($dir_name)) {
-                mkdir($dir_name);
-            }
-            $fileName = $dir_name . '/' . 'GuardeBot' . '-' . date('Y-m-d') . '.txt';
-            $myFile = fopen($fileName, 'a+');
-            $date = '============[Date]============';
-            $date .= "\n";
-            $date .= '[ ' . date('Y-m-d H:i:s  e') . ' ] ';
-            fwrite($myFile, $date . $text . "\n\n");
-            fclose($myFile);
-        } catch (\Exception $e) {
-            echo $e->getMessage();
+        $dir_name = 'logs';
+        if (!is_dir($dir_name)) {
+            mkdir($dir_name);
         }
+        $fileName = $dir_name . '/' . 'GuardeBot' . '-' . date('Y-m-d') . '.txt';
+        $myFile = fopen($fileName, 'a+');
+        $date = '============[Date]============';
+        $date .= "\n";
+        $date .= '[ ' . date('Y-m-d H:i:s  e') . ' ] ';
+        fwrite($myFile, $date . $text . "\n\n");
+        fclose($myFile);
     }
 
     private function appendNewLineAndIndent(&$text, $level)
