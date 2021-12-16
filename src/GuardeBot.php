@@ -6,7 +6,8 @@ use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
 use TelegramGuardeBot\GuardeBotLogger;
 use TelegramGuardeBot\Validators\MlSpamTextValidator;
 use TelegramGuardeBot\Learners\MlSpamTextLearner;
-use TelegramGuardeBot\Managers\Spams\SpamAuthorsManager;
+use TelegramGuardeBot\Managers\Masters\MastersManager;
+use TelegramGuardeBot\Managers\Spams\SpammersManager;
 
 require_once('Telegram.php');
 
@@ -267,8 +268,7 @@ class GuardeBot
 		else if($this->isNewMemberIncoming($update, $newMember))
 		{
 			//check if incoming user is marked as banned
-			$spamAuthorsManager = SpamAuthorsManager::getInstance();
-			if($spamAuthorsManager->hasUserId($newMember->userId))
+			if(SpammersManager::getInstance()->has($newMember->userId) && !MastersManager::getInstance()->has($newMember->userId))
 			{
 				$messageChatId = null;
 				if($this->tryGetMessageChatId($update, $messageChatId))
@@ -342,18 +342,19 @@ class GuardeBot
 				$messageAuthorInfo = null;
 				if($this->tryGetMessageAuthorInfo($update, $messageAuthorInfo))
 				{
-					$spamAuthorsManager = SpamAuthorsManager::getInstance();
-					$spamAuthorsManager->addGlobal($messageAuthorInfo->userId, $messageAuthorInfo->userName, $messageAuthorInfo->firstName, $messageAuthorInfo->lastName);
-					$authorDisplayName = $this->getBestMessageAuthorDisplayName($messageAuthorInfo);
-					$messageChatId = null;
-					if($this->tryGetMessageChatId($update, $messageChatId))
+					if(!MastersManager::getInstance()->has($messageAuthorInfo->userId))
 					{
-						if($this->banChatMember($messageChatId, $messageAuthorInfo))
+						SpammersManager::getInstance()->add($messageAuthorInfo->userId, $messageAuthorInfo->userName, $messageAuthorInfo->firstName, $messageAuthorInfo->lastName);
+						$authorDisplayName = $this->getBestMessageAuthorDisplayName($messageAuthorInfo);
+						$messageChatId = null;
+						if($this->tryGetMessageChatId($update, $messageChatId))
 						{
-							$this->say($messageChatId, GuardeBotMessagesBase::get(GuardeBotMessagesBase::ACK_BAN_MESSAGE_AUTHOR, [$authorDisplayName]));
+							if($this->banChatMember($messageChatId, $messageAuthorInfo))
+							{
+								$this->say($messageChatId, GuardeBotMessagesBase::get(GuardeBotMessagesBase::ACK_BAN_MESSAGE_AUTHOR, [$authorDisplayName]));
+							}
 						}
 					}
-					$this->log($spamAuthorsManager, 'Author "'.$authorDisplayName.'" marked as spammer !');
 				}
 				break;
 			default:
