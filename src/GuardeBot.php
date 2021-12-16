@@ -214,10 +214,10 @@ class GuardeBot
 
 		try
 		{
-			if(isset($update->message) && !empty($update->message->text))
+			if(isset($update->message))
 			{
 				//handle update message
-				$this->processUpdateMessage($update);
+				$this->processUpdate($update);
 			}
 
 			$this->setLastHandledUpdateInfo($updateId, time());
@@ -240,22 +240,55 @@ class GuardeBot
 	 */
 	private function processUpdateMessage($update)
 	{
-		$message = $update->message->text;
+		$message = isset($update->message->text) ? $update->message->text : '';
 		$spamValidator = new MlSpamTextValidator();
 		$isValid = $spamValidator->validate($message);
+		$commandText = '';
+		$newMember = null;
 		if(!$isValid)
 		{
 			//this is a spam
 			//TODO: handle spam
 		}
-		else
+		else if($this->isCommand($message, $commandText))
 		{
-			$commandText = '';
-			if($this->isCommand($message, $commandText))
+			$this->log('Processing command ...');
+			$this->processCommand($commandText, $update);
+		}
+		else if($this->isNewMemberIncoming($update, $newMember))
+		{
+			//check if incoming user is marked as banned
+			$spamAuthorsManager = SpamAuthorsManager::getInstance();
+			if($spamAuthorsManager->hasUserId($newMember->userId))
 			{
-				$this->processCommand($commandText, $update);
+				$messageChatId = null;
+				if($this->tryGetMessageChatId($update, $messageChatId))
+				{
+					$this->banChatMember($messageChatId, $newMember);
+				}
 			}
 		}
+		// else
+		// {
+		// 	$this->log('Unkown process update type !');
+		// }
+	}
+
+	/**
+	 * Whether or not the update concerns a new user incoming
+	 * \param $update The update to verify
+	 * \param $newMember The member info that will be populated if this is a new member incoming
+	 */
+	private function isNewMemberIncoming($update, &$newMember) : bool
+	{
+		if(
+			isset($update->message)
+			&& isset($update->message->new_chat_member)
+			&& isset($update->message->new_chat_member->id))
+		{
+			return $this->tryGetMemberInfoFromStructure($update->message->new_chat_member, $newMember);
+		}
+		return false;
 	}
 
 	/**
@@ -300,24 +333,34 @@ class GuardeBot
 				$messageAuthorInfo = null;
 				if($this->tryGetMessageAuthorInfo($update, $messageAuthorInfo))
 				{
-					$spamAuthorsManager = new SpamAuthorsManager();
+					$spamAuthorsManager = SpamAuthorsManager::getInstance();
 					$spamAuthorsManager->addGlobal($messageAuthorInfo->userId, $messageAuthorInfo->userName, $messageAuthorInfo->firstName, $messageAuthorInfo->lastName);
+					$authorDisplayName = $this->getBestMessageAuthorDisplayName($messageAuthorInfo);
 					$messageChatId = null;
 					if($this->tryGetMessageChatId($update, $messageChatId))
 					{
-						if($this->telegram->banChatMember(['chat_id' => $messageChatId, 'user_id' => $messageAuthorInfo->userId, 'until_date' => 0, 'revoke_messages' => true]))
+						if($this->banChatMember($messageChatId, $messageAuthorInfo))
 						{
-							$authorDisplayName = $this->getBestMessageAuthorDisplayName($messageAuthorInfo);
 							$this->say($messageChatId, GuardeBotMessagesBase::get(GuardeBotMessagesBase::ACK_BAN_MESSAGE_AUTHOR, [$authorDisplayName]));
 						}
 					}
-					$this->log($spamAuthorsManager, 'Author marked as spammer !');
+					$this->log($spamAuthorsManager, 'Author "'.$authorDisplayName.'" marked as spammer !');
 				}
 				break;
 			default:
 				$this->log('unrecognized command : '.$commandText);
 				break;
 		}
+	}
+
+	private function banChatMember($chatId, $memberInfo)
+	{
+		if($this->telegram->banChatMember(['chat_id' => $chatId, 'user_id' => $memberInfo->userId, 'until_date' => 0, 'revoke_messages' => true]))
+		{
+			$authorDisplayName = $this->getBestMessageAuthorDisplayName($memberInfo);
+			return true;
+		}
+		return false;
 	}
 
 	private function getBestMessageAuthorDisplayName($messageAuthorInfo)
@@ -394,16 +437,25 @@ class GuardeBot
 
 			if(isset($from))
 			{
-				$messageAuthorInfo = (object)[
-					'userId' => $from->id,
-					'userName' => !empty($from->username) ? $from->username : '',
-					'firstName' => !empty($from->first_name) ? $from->first_name : '',
-					'lastName' => !empty($from->last_name) ? $from->last_name : ''
-				];
+				return $this->tryGetMemberInfoFromStructure($from, $messageAuthorInfo);
 			}
 
-			return true;
 		}
+		return false;
+	}
+
+	private function tryGetMemberInfoFromStructure($from, &$memberInfo)
+	{
+		if(isset($from))
+		{
+			$memberInfo = (object)[
+				'userId' => $from->id,
+				'userName' => !empty($from->username) ? $from->username : '',
+				'firstName' => !empty($from->first_name) ? $from->first_name : '',
+				'lastName' => !empty($from->last_name) ? $from->last_name : ''
+			];
+			return true;
+		}		
 		return false;
 	}
 }

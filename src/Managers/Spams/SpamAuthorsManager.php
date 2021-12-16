@@ -1,18 +1,30 @@
 <?php
-
 declare(strict_types=1);
 
 namespace TelegramGuardeBot\Managers\Spams;
+use TelegramGuardeBot\GuardeBotLogger;
 
 class SpamAuthorsManager
 {
+    private static SpamAuthorsManager $instance;
     private array $loadedAuthors;
+    private bool $areAuthorsLoaded;
     private const GlobalBlackListFileName = 'Spammers.lst';
     private const Headers = ['ID', 'USERNAME', 'FIRST_NAME', 'LAST_NAME'];
 
-    public function __construct()
+    private function __construct()
     {
         $this->loadedAuthors = [];
+        $this->areAuthorsLoaded = false;
+    }
+
+    public static function getInstance()
+    {
+        if(!isset(self::$instance))
+        {
+            self::$instance = new SpamAuthorsManager();
+        }
+        return self::$instance;
     }
 
     /**
@@ -39,8 +51,14 @@ class SpamAuthorsManager
         return $csvLineData[0] == SpamAuthorsManager::Headers[0];
     }
 
-    private function hasUserId($userId) : bool
+    public function hasUserId($userId) : bool
     {
+
+        if(!$this->areAuthorsLoaded)
+        {
+            $this->loadFromFile();
+        }
+
         foreach($this->loadedAuthors as $author)
         {
             if($author[0] == $userId)
@@ -62,15 +80,26 @@ class SpamAuthorsManager
                     {
                         continue;
                     }
+                    if($csvLineData == NULL)
+                    {
+                        //empty csv line
+                        continue;
+                    }
                     $this->loadedAuthors[] = $csvLineData;
                 }
             }
             fclose($handle);
+            $this->areAuthorsLoaded = true;
         }
     }
 
     private function saveToFile()
     {
+        if(!$this->areAuthorsLoaded)
+        {
+            $this->loadFromFile();
+        }
+
         if (($handle = fopen(SpamAuthorsManager::GlobalBlackListFileName, 'w')) !== FALSE) {
             
             fputcsv($handle, SpamAuthorsManager::Headers, ',', '"', '\\');
