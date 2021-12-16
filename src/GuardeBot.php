@@ -276,6 +276,7 @@ class GuardeBot
 		{
 			//this is a spam
 			//TODO: handle spam
+			$this->log($update, 'Processing spam treatment ...');
 		}
 		else if($this->isCommand($message, $commandText))
 		{
@@ -295,10 +296,10 @@ class GuardeBot
 				}
 			}
 		}
-		// else
-		// {
-		// 	$this->log('Unkown process update type !');
-		// }
+		else
+		{
+			$this->log($update, 'Unkown process update type !');
+		}
 	}
 
 	/**
