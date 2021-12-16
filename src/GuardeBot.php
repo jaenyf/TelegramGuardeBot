@@ -212,6 +212,10 @@ class GuardeBot
 			}
 		}
 
+		set_exception_handler([$this, 'handleException']);
+		set_error_handler([$this, 'handleError']);
+		$previousErrorReportingLevel = error_reporting(E_ALL);
+
 		try
 		{
 			if(isset($update->message))
@@ -221,17 +225,40 @@ class GuardeBot
 			}
 
 			$this->setLastHandledUpdateInfo($updateId, time());
-			return true;
 		}
 		catch(\Throwable $e)
 		{
-			$this->log($e, 'processUpdate - exception');
-			return false;
+			$this->handleException($e);
 		}
-		catch (\Exception $e) {
-			$this->log($e, 'processUpdate - exception');
-			return false;
+		catch (\Exception $e)
+		{
+			$this->handleException($e);
 		}
+		finally
+		{
+			error_reporting($previousErrorReportingLevel);
+			restore_error_handler();
+			restore_exception_handler();
+		}	
+
+		if(isset($this->lastHandledException))
+		{
+			throw $this->lastHandledException;
+		}
+
+		return true;
+	}
+
+	private $lastHandledException;
+	private function handleError($errno, $errstr, $errfile, $errline)
+	{
+		throw new \ErrorException($errstr, $errno, 0, $errfile, $errline);
+	}
+
+	private function handleException(\Throwable $e)
+	{
+		$this->lastHandledException = $e;
+		$this->log($e, 'handleException');
 	}
 
 	/**
