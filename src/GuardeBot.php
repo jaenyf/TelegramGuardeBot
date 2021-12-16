@@ -188,10 +188,10 @@ class GuardeBot
 	
 
 	/**
-	 * Process the updates received by the web hook
+	 * Handle the updates received by the web hook
 	 * \param $updates the updates in json format
 	 */
-	public function processUpdate($update)
+	public function handleUpdate($update)
 	{
 		$updateId = $update->update_id;
 		$updateInfo = $this->getLastHandledUpdateInfo();
@@ -238,7 +238,7 @@ class GuardeBot
 	 * Handle update message and act based upon it
 	 * \param $update the telegram update
 	 */
-	private function processUpdateMessage($update)
+	private function processUpdate($update)
 	{
 		$message = isset($update->message->text) ? $update->message->text : '';
 		$spamValidator = new MlSpamTextValidator();
