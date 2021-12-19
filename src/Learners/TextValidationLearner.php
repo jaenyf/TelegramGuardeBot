@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot\Learners;
 
-
 interface TextValidationLearner
 {
     /**

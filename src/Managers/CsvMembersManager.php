@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TelegramGuardeBot\Managers;
@@ -19,13 +20,12 @@ abstract class CsvMembersManager
         $this->isDataLoaded = false;
     }
 
-    protected static abstract function createInstance() : CsvMembersManager;
-    protected abstract function getFilename() : string;
+    protected static abstract function createInstance(): CsvMembersManager;
+    protected abstract function getFilename(): string;
 
     public static function getInstance()
     {
-        if(!isset(self::$instance))
-        {
+        if (!isset(self::$instance)) {
             self::$instance = static::createInstance();
         }
         return self::$instance;
@@ -40,11 +40,9 @@ abstract class CsvMembersManager
         string $userName,
         string $firstName,
         string $lastName
-    )
-    {
+    ) {
         $this->loadFromFile();
-        if(!$this->has($id))
-        {
+        if (!$this->has($id)) {
             $this->loadedData[] = [$id, $userName, $firstName, $lastName];
         }
         $this->saveToFile();
@@ -58,17 +56,14 @@ abstract class CsvMembersManager
     /**
      * Whether or not the given member id is present in the list
      */
-    public function has(string $id) : bool
+    public function has(string $id): bool
     {
-        if(!$this->isDataLoaded)
-        {
+        if (!$this->isDataLoaded) {
             $this->loadFromFile();
         }
 
-        foreach($this->loadedData as $data)
-        {
-            if($data[0] == $id)
-            {
+        foreach ($this->loadedData as $data) {
+            if ($data[0] == $id) {
                 return true;
             }
         }
@@ -79,14 +74,11 @@ abstract class CsvMembersManager
     {
         if (($handle = fopen($this->getFilename(), 'c+')) !== FALSE) {
             while (($fields = fgetcsv($handle, 0, ',', '"', '\\')) !== FALSE) {
-                if(count($fields))
-                {
-                    if($this->isHeader($fields))
-                    {
+                if (count($fields)) {
+                    if ($this->isHeader($fields)) {
                         continue;
                     }
-                    if($fields == NULL)
-                    {
+                    if ($fields == NULL) {
                         //empty csv line
                         continue;
                     }
@@ -100,13 +92,12 @@ abstract class CsvMembersManager
 
     private function saveToFile()
     {
-        if(!$this->isDataLoaded)
-        {
+        if (!$this->isDataLoaded) {
             $this->loadFromFile();
         }
 
         if (($handle = fopen($this->getFilename(), 'w')) !== FALSE) {
-            
+
             fputcsv($handle, CsvMembersManager::Headers, ',', '"', '\\');
             foreach ($this->loadedData as $fields) {
                 fputcsv($handle, $fields, ',', '"', '\\');

@@ -20,6 +20,11 @@
         "psr-4": {
             "TelegramGuardeBot\\": "src/"
         }
+    },
+    "require-dev": {
+        "editorconfig-checker/editorconfig-checker": "^10.2"
+    },
+    "scripts": {
+        "lint:editorconfig": "editorconfig-checker"
     }
-
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "087581135678b29c00588ec5b43595fa",
+    "content-hash": "7d5c7d805237ec701ee9eae5d4afa8e7",
     "packages": [
         {
             "name": "php-ai/php-ml",
@@ -64,7 +64,59 @@
             "time": "2020-05-27T09:52:59+00:00"
         }
     ],
-    "packages-dev": [],
+    "packages-dev": [
+        {
+            "name": "editorconfig-checker/editorconfig-checker",
+            "version": "10.2.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/editorconfig-checker/editorconfig-checker.php.git",
+                "reference": "324d828b5fa4a210a21ecb3da17ca2bbb288b3b0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/editorconfig-checker/editorconfig-checker.php/zipball/324d828b5fa4a210a21ecb3da17ca2bbb288b3b0",
+                "reference": "324d828b5fa4a210a21ecb3da17ca2bbb288b3b0",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2 || ^8.0"
+            },
+            "require-dev": {
+                "php-coveralls/php-coveralls": "^2.1",
+                "phpunit/phpunit": "^8.3",
+                "squizlabs/php_codesniffer": "^3.4"
+            },
+            "bin": [
+                "bin/editorconfig-checker",
+                "bin/ec"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "EditorconfigChecker\\": "src/EditorconfigChecker"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Max Strübing",
+                    "email": "mxstrbng@gmail.com",
+                    "homepage": "https://github.com/mstruebing",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "A tool to verify that your files follow the rules of your .editorconfig",
+            "support": {
+                "issues": "https://github.com/editorconfig-checker/editorconfig-checker.php/issues",
+                "source": "https://github.com/editorconfig-checker/editorconfig-checker.php"
+            },
+            "time": "2021-11-23T08:28:09+00:00"
+        }
+    ],
     "aliases": [],
     "minimum-stability": "alpha",
     "stability-flags": [],

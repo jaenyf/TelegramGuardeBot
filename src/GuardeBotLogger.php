@@ -20,20 +20,18 @@ class GuardeBotLogger
      * Prints the list of parameters from/to Telegram's API endpoint
      * \param $element element as array
      */
-    public static function log($element, $title=null)
+    public static function log($element, $title = null)
     {
-        if(!isset(self::$self))
-        {
+        if (!isset(self::$self)) {
             self::$self = new GuardeBotLogger();
         }
-        
+
         $e = new \Exception();
         $message = PHP_EOL;
         $message .= '=========[Element]=========';
-        if(!empty($title))
-        {
+        if (!empty($title)) {
             $message .= PHP_EOL;
-            $message .= '### ' . $title. ' ###';
+            $message .= '### ' . $title . ' ###';
         }
         $message .= PHP_EOL;
         $message .= self::$self->rt($element);
@@ -82,20 +80,19 @@ class GuardeBotLogger
         $text = '';
         $text .= $this->getOpeningSeparatorByType('object');
         $this->appendNewLineAndIndent($text, $level);
-        $text .= ('Message : ' . self::$self->rt($element->getMessage(), $level +1, true) . ', ');
+        $text .= ('Message : ' . self::$self->rt($element->getMessage(), $level + 1, true) . ', ');
         $this->appendNewLineAndIndent($text, $level);
-        $text .= ('Code : ' . self::$self->rt($element->getCode(), $level +1, true) . ', ');
+        $text .= ('Code : ' . self::$self->rt($element->getCode(), $level + 1, true) . ', ');
         $this->appendNewLineAndIndent($text, $level);
-        $text .= ('File : ' . self::$self->rt($element->getFile(), $level +1, true) . ', ');
+        $text .= ('File : ' . self::$self->rt($element->getFile(), $level + 1, true) . ', ');
         $this->appendNewLineAndIndent($text, $level);
-        $text .= ('Line : ' . self::$self->rt($element->getLine(), $level +1, true) . ', ');
+        $text .= ('Line : ' . self::$self->rt($element->getLine(), $level + 1, true) . ', ');
         $this->appendNewLineAndIndent($text, $level);
-        $text .= ('Trace : ' . self::$self->rt($element->getTrace(), $level +1, true) . ', ');
+        $text .= ('Trace : ' . self::$self->rt($element->getTrace(), $level + 1, true) . ', ');
         $previous = $element->getPrevious();
-        if(isset($previous))
-        {
+        if (isset($previous)) {
             $this->appendNewLineAndIndent($text, $level);
-            $text .= ('Previous : ' . self::$self->logThrowable($previous, $level +1, true) . ', ');
+            $text .= ('Previous : ' . self::$self->logThrowable($previous, $level + 1, true) . ', ');
         }
 
         $text = substr($text, 0, -2);
@@ -108,7 +105,7 @@ class GuardeBotLogger
     private function logArrayOrObject($element, $level, $type)
     {
         $text = '';
-        
+
 
         $keys = [];
         $values = [];
@@ -120,8 +117,7 @@ class GuardeBotLogger
         }
 
 
-        if($keysCount === 0)
-        {
+        if ($keysCount === 0) {
             //empty array or object
             $text .= $this->getOpeningSeparatorByType($type);
             $text .= $this->getClosingSeparatorByType($type);
@@ -135,7 +131,7 @@ class GuardeBotLogger
             $key = $keys[$i];
             $value = $values[$i];
             $this->appendNewLineAndIndent($text, $level);;
-            $text .= ($this->rt($key, $level +1 ) . ' : ' . self::$self->rt($value, $level +1, true) . ', ');
+            $text .= ($this->rt($key, $level + 1) . ' : ' . self::$self->rt($value, $level + 1, true) . ', ');
         }
 
         $text = substr($text, 0, -2);
@@ -147,20 +143,22 @@ class GuardeBotLogger
 
     private function getOpeningSeparatorByType($type)
     {
-        switch($type)
-        {
-            case 'array' : return '[';
-            case 'object' : return '{';
+        switch ($type) {
+            case 'array':
+                return '[';
+            case 'object':
+                return '{';
         }
         return '';
     }
 
     private function getClosingSeparatorByType($type)
     {
-        switch($type)
-        {
-            case 'array' : return ']';
-            case 'object' : return '}';
+        switch ($type) {
+            case 'array':
+                return ']';
+            case 'object':
+                return '}';
         }
         return '';
     }
@@ -168,30 +166,22 @@ class GuardeBotLogger
     private function rt($element, $level = 0, $skipIndent = false)
     {
         $text = '';
-        if($level >= $this->maxDeepLevel)
-        {
+        if ($level >= $this->maxDeepLevel) {
             return $text;
         }
-        
-        if(!$skipIndent)
-        {
+
+        if (!$skipIndent) {
             $this->indent($text, $level);
         }
-        if ($element instanceof \CURLFile)
-        {
+        if ($element instanceof \CURLFile) {
             $text .= ' - CURLFile = File' . PHP_EOL;
-        }
-        else if ($element instanceof \Throwable)
-        {
+        } else if ($element instanceof \Throwable) {
             $text .= $this->logThrowable($element, $level);
-        }
-        else if ($element instanceof \Exception)
-        {
+        } else if ($element instanceof \Exception) {
             $text .= $this->logThrowable($element, $level);
-        }
-        else {
+        } else {
             $type = gettype($element);
-            switch ( $type) {
+            switch ($type) {
                 case 'array':
                 case 'object':
                     $text .= $this->logArrayOrObject($element, $level,  $type);
@@ -216,7 +206,7 @@ class GuardeBotLogger
                     $text .= '<unknown type>';
                     break;
                 default:
-                    $text .= ('\'' . str_replace('\'', '\\\'', $element) . '\'' );
+                    $text .= ('\'' . str_replace('\'', '\\\'', $element) . '\'');
                     break;
             }
         }
