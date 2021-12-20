@@ -8,6 +8,7 @@ use TelegramGuardeBot\Validators\MlSpamTextValidator;
 use TelegramGuardeBot\Learners\MlSpamTextLearner;
 use TelegramGuardeBot\Managers\Masters\MastersManager;
 use TelegramGuardeBot\Managers\Spams\SpammersManager;
+use TelegramGuardeBot\Helpers\ArrayHelper;
 
 require_once('Telegram.php');
 
@@ -83,12 +84,14 @@ class GuardeBot
 
     public function isHooked()
     {
-        $hookInfo = $this->telegram->getWebhookInfo();
-        $this->log($hookInfo, 'hookInfo:');
+        $hookInfo = ArrayHelper::toObject($this->telegram->getWebhookInfo());
         if (!isset($hookInfo)) {
             return false;
         }
-        return !empty($hookInfo->url);
+        if (!isset($hookInfo->result)) {
+            return false;
+        }
+        return !empty($hookInfo->result->url);
     }
 
     public function hook($url, $certificate = '', $dropPendingUpdates = false)
