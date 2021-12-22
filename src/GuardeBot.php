@@ -3,7 +3,7 @@
 namespace TelegramGuardeBot;
 
 use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
-use TelegramGuardeBot\GuardeBotLogger;
+use TelegramGuardeBot\Log\GuardeBotLogger;
 use TelegramGuardeBot\Validators\MlSpamTextValidator;
 use TelegramGuardeBot\Learners\MlSpamTextLearner;
 use TelegramGuardeBot\Managers\Masters\MastersManager;
@@ -24,10 +24,9 @@ class GuardeBot
      */
     const WEBHOOK_LOCK_FILENAME = 'guardebot.lock';
 
-    private $telegram = null;
+    private \Telegram $telegram;
     private $webHookUniqueName = null;
-    private $logEnabled = true;
-    private $logChatId = null;
+    private int $logChatId;
 
     /**
      * Create a GuardeBot instance
@@ -37,17 +36,16 @@ class GuardeBot
      * \return an instance of the class.
      */
     public function __construct(
-        $bot_token,
-        $webHookUniqueName,
-        $logEnabled = true,
-        array $proxy = []
+        \Telegram $telegramApi,
+        string $webHookUniqueName,
+        int $logChatId
     ) {
         $this->webHookUniqueName = trim(isset($webHookUniqueName) ? $webHookUniqueName : '');
         if ($this->webHookUniqueName === '') {
             throw new \Exception('WebHook unique name has to be defined');
         }
-        $this->logEnabled = $logEnabled;
-        $this->telegram = new \Telegram($bot_token, $logEnabled, $proxy);
+        $this->telegram = $telegramApi;
+        $this->$logChatId = $logChatId;
     }
 
     private function deriveWebHookUniqueFilename($baseFilename)
@@ -130,27 +128,15 @@ class GuardeBot
         $this->log('web hook deleted');
     }
 
-    public function setLogChatId($logChatId)
-    {
-        $this->logChatId = $logChatId;
-    }
-
     /**
      * Log to file and telegram test group
      */
     public function log($element, $title = null)
     {
-        if (!$this->logEnabled) {
-            return;
-        }
-
-        $elementText = GuardeBotLogger::log($element, $title);
-        if (isset($this->logChatId)) {
-            $this->say($this->logChatId, $elementText);
-        }
+        GuardeBotLogger::getInstance()->debug($title, [$element]);
     }
 
-    private function say($chatId, $message)
+    public function say($chatId, $message)
     {
         $this->telegram->sendMessage(
             array(
