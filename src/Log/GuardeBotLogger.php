@@ -4,6 +4,7 @@ namespace TelegramGuardeBot\Log;
 
 use Psr\Log\LoggerInterface;
 use Monolog\Logger;
+use Monolog\ErrorHandler;
 use Monolog\Handler\StreamHandler;
 use TelegramGuardeBot\GuardeBot;
 use TelegramGuardeBot\Log\Handler\TelegramChatHandler;
@@ -38,6 +39,12 @@ class GuardeBotLogger
         }
 
         $logger->pushHandler(new StreamHandler('logs/GuardeBot.log', Logger::DEBUG));
+
+        //Register global errors handler
+        $handler = new ErrorHandler($logger);
+        $handler->registerErrorHandler([], true);
+        $handler->registerExceptionHandler();
+        $handler->registerFatalHandler();
 
         return (static::$instance = $logger);
     }
