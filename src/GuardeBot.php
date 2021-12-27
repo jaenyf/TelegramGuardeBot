@@ -2,6 +2,8 @@
 
 namespace TelegramGuardeBot;
 
+use ErrorException;
+use TelegramGuardeBot\TelegramApi;
 use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
 use TelegramGuardeBot\Log\GuardeBotLogger;
 use TelegramGuardeBot\Validators\MlSpamTextValidator;
@@ -10,7 +12,7 @@ use TelegramGuardeBot\Managers\Masters\MastersManager;
 use TelegramGuardeBot\Managers\Spams\SpammersManager;
 use TelegramGuardeBot\Helpers\ArrayHelper;
 
-require_once('Telegram.php');
+
 
 /**
  * GuardeBot Class.
@@ -24,7 +26,7 @@ class GuardeBot
      */
     const WEBHOOK_LOCK_FILENAME = 'guardebot.lock';
 
-    private \Telegram $telegram;
+    private TelegramApi $telegram;
     private $webHookUniqueName = null;
     private int $logChatId;
 
@@ -36,7 +38,7 @@ class GuardeBot
      * \return an instance of the class.
      */
     public function __construct(
-        \Telegram $telegramApi,
+        TelegramApi $telegramApi,
         string $webHookUniqueName,
         int $logChatId
     ) {
@@ -83,29 +85,25 @@ class GuardeBot
     public function isHooked()
     {
         $hookInfo = ArrayHelper::toObject($this->telegram->getWebhookInfo());
-        if (!isset($hookInfo)) {
-            return false;
-        }
-        if (!isset($hookInfo->result)) {
-            return false;
-        }
-        return !empty($hookInfo->result->url);
+        return !empty($hookInfo->url);
     }
 
     public function hook($url, $certificate = '', $dropPendingUpdates = false)
     {
+        if (empty($url)) {
+            throw new ErrorException('Can not hook to an empty url');
+        }
+
         $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
         if (file_exists($hookFileName)) {
             return;
         }
 
         if (!$this->isHooked()) {
-            if (!$this->telegram->setWebhook($url, $certificate, $dropPendingUpdates)) {
-                throw new \Exception('Failed to set web hook');
-            }
+            $this->telegram->setWebhook($url, $certificate, null, null, null, $dropPendingUpdates);
 
             //create the hook lock file as all went well:
-            fclose(fopen($hookFileName, "w"));
+            fclose(fopen($hookFileName, "a"));
 
             $this->log('web hook set');
         } else {
@@ -116,14 +114,13 @@ class GuardeBot
     public function unHook($dropPendingUpdates = false)
     {
         if ($this->isHooked()) {
-            if (!$this->telegram->deleteWebhook($dropPendingUpdates)) {
-                throw new \Exception('Failed to delete web hook');
-            }
+            $this->telegram->deleteWebhook($dropPendingUpdates);
         }
-        if (file_exists(self::WEBHOOK_LOCK_FILENAME)) {
-            $hookFilePointer = fopen(self::WEBHOOK_LOCK_FILENAME, 'w+');
-            fclose($$hookFilePointer);
-            unlink($$hookFilePointer);
+        $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
+        if (file_exists($hookFileName)) {
+            $hookFilePointer = fopen($hookFileName, 'a');
+            fclose($hookFilePointer);
+            unlink($hookFileName);
         }
         $this->log('web hook deleted');
     }
