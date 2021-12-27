@@ -1,9 +1,7 @@
-
-testbot.php
-
-test.php
-
 vendor/
+
+/*.php
+/*.config
 
 *.dat
 
