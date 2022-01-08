@@ -16,7 +16,8 @@
         "ext-curl": "*",
         "php-ai/php-ml": "^0.9.0",
         "monolog/monolog": "^2.3",
-        "psr/log": "^1.1"
+        "psr/log": "^1.1",
+        "php-di/php-di": "^7.0@beta"
     },
     "autoload": {
         "psr-4": {
