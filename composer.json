@@ -24,7 +24,8 @@
         }
     },
     "require-dev": {
-        "editorconfig-checker/editorconfig-checker": "^10.2"
+        "editorconfig-checker/editorconfig-checker": "^10.2",
+        "phpunit/phpunit": "^9.5"
     },
     "scripts": {
         "lint:editorconfig": "editorconfig-checker"
