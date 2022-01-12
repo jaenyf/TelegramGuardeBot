@@ -47,7 +47,7 @@ class GuardeBot
             throw new \Exception('WebHook unique name has to be defined');
         }
         $this->telegram = $telegramApi;
-        $this->$logChatId = $logChatId;
+        $this->logChatId = $logChatId;
     }
 
     private function deriveWebHookUniqueFilename($baseFilename)
