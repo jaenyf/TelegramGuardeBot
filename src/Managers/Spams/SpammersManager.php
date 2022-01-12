@@ -9,6 +9,7 @@ use TelegramGuardeBot\Managers\CsvMembersManager;
 class SpammersManager extends CsvMembersManager
 {
     private const GlobalListFileName = 'Spammers.lst';
+    private const GlobalListLockFileName = 'Spammers.lst.lock';
 
     protected static function createInstance(): CsvMembersManager
     {
@@ -18,5 +19,10 @@ class SpammersManager extends CsvMembersManager
     protected function getFilename(): string
     {
         return self::GlobalListFileName;
+    }
+
+    protected function getLockFilename(): string
+    {
+        return self::GlobalListLockFileName;
     }
 }

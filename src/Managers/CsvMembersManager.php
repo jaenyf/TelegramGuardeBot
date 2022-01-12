@@ -4,24 +4,22 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot\Managers;
 
+use TelegramGuardeBot\Managers\CsvManager;
+
 /**
  * Manage members entries in a CSV file
  */
-abstract class CsvMembersManager
+abstract class CsvMembersManager extends CsvManager
 {
     private static CsvMembersManager $instance;
-    private array $loadedData;
-    private bool $isDataLoaded;
     private const Headers = ['ID', 'USERNAME', 'FIRST_NAME', 'LAST_NAME'];
 
     protected function __construct()
     {
-        $this->loadedData = [];
-        $this->isDataLoaded = false;
+        parent::__construct(CsvMembersManager::Headers);
     }
 
     protected static abstract function createInstance(): CsvMembersManager;
-    protected abstract function getFilename(): string;
 
     public static function getInstance()
     {
@@ -29,6 +27,11 @@ abstract class CsvMembersManager
             self::$instance = static::createInstance();
         }
         return self::$instance;
+    }
+
+    protected function useLocking(): bool
+    {
+        return false;
     }
 
     /**
@@ -48,11 +51,6 @@ abstract class CsvMembersManager
         $this->saveToFile();
     }
 
-    private function isHeader($csvLineData)
-    {
-        return $csvLineData[0] == CsvMembersManager::Headers[0];
-    }
-
     /**
      * Whether or not the given member id is present in the list
      */
@@ -68,41 +66,5 @@ abstract class CsvMembersManager
             }
         }
         return false;
-    }
-
-    private function loadFromFile()
-    {
-        if (($handle = fopen($this->getFilename(), 'c+')) !== FALSE) {
-            while (($fields = fgetcsv($handle, 0, ',', '"', '\\')) !== FALSE) {
-                if (count($fields)) {
-                    if ($this->isHeader($fields)) {
-                        continue;
-                    }
-                    if ($fields == NULL) {
-                        //empty csv line
-                        continue;
-                    }
-                    $this->loadedData[] = $fields;
-                }
-            }
-            fclose($handle);
-            $this->isDataLoaded = true;
-        }
-    }
-
-    private function saveToFile()
-    {
-        if (!$this->isDataLoaded) {
-            $this->loadFromFile();
-        }
-
-        if (($handle = fopen($this->getFilename(), 'w')) !== FALSE) {
-
-            fputcsv($handle, CsvMembersManager::Headers, ',', '"', '\\');
-            foreach ($this->loadedData as $fields) {
-                fputcsv($handle, $fields, ',', '"', '\\');
-            }
-            fclose($handle);
-        }
     }
 }

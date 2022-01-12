@@ -12,12 +12,15 @@ class GuardeBotTestCase extends TestCase
 {
     public static function tearDownAfterClass(): void
     {
-        if(directoryExists('logs')){
-            if(file_exists('logs/GuardeBot.log')){
+        if(directoryExists('logs'))
+        {
+            if(file_exists('logs/GuardeBot.log'))
+            {
                 unlink('logs/GuardeBot.log');
             }
             $removeLogsFolder = (count(scandir('logs')) <= 2);
-            if($removeLogsFolder){
+            if($removeLogsFolder)
+            {
                 rmdir('logs');
             }
         }
