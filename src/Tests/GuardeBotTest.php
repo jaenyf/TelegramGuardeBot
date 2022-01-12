@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
+use TelegramGuardeBot\Tests\GuardeBotTestCase;
 use TelegramGuardeBot\GuardeBot;
 use TelegramGuardeBot\TelegramApi;
 
-final class GuardeBotTest extends TestCase
+final class GuardeBotTest extends GuardeBotTestCase
 {
     private const logChatTestId = 123456;
     private const hookTestName = 'test';
@@ -51,20 +51,23 @@ final class GuardeBotTest extends TestCase
         $url = 'http://web.ho.ok';
         $certificate = 'cert';
         $dropPendingUpdates = true;
+        $allowedUpdates = null;
         $telegramApiStub = $this->createStub(TelegramApi::class);
 
         $webHookInfo = new \stdClass();
         $webHookInfo->url = '';
         $telegramApiStub->method('getWebhookInfo')
              ->willReturn($webHookInfo);
+        $telegramApiStub->method('setWebhook')
+            ->willReturn(true);
 
         $telegramApiStub->expects($this->once())
             ->method('setWebhook')
-            ->with($this->equalTo($url, $certificate, null, null, null, $dropPendingUpdates));
+            ->with($this->equalTo($url, $certificate, null, null,  $allowedUpdates, $dropPendingUpdates));
 
         //Act / Assert
         $sut = new GuardeBot($telegramApiStub, GuardeBotTest::hookTestName, GuardeBotTest::logChatTestId);
-        $sut->hook($url, $certificate, $dropPendingUpdates);
+        $sut->hook($url, $certificate,  $allowedUpdates, $dropPendingUpdates);
     }
 
     public function testSayUseApi(): void

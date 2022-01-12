@@ -11,6 +11,7 @@ use TelegramGuardeBot\Learners\MlSpamTextLearner;
 use TelegramGuardeBot\Managers\Masters\MastersManager;
 use TelegramGuardeBot\Managers\Spams\SpammersManager;
 use TelegramGuardeBot\Helpers\ArrayHelper;
+use TelegramGuardeBot\Helpers\TelegramHelper;
 
 
 
@@ -88,22 +89,44 @@ class GuardeBot
         return !empty($hookInfo->url);
     }
 
-    public function hook($url, $certificate = '', $dropPendingUpdates = false)
+    /**
+     * \param $allowedUpdate Array, Use default null value to use the default TelegramApi behavior, use empty array to explicitely allow all updates
+     */
+    public function hook($url, $certificate = '', $allowedUpdate = null, $dropPendingUpdates = false)
     {
         if (empty($url)) {
             throw new ErrorException('Can not hook to an empty url');
         }
 
-        $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
-        if (file_exists($hookFileName)) {
-            return;
-        }
-
         if (!$this->isHooked()) {
-            $this->telegram->setWebhook($url, $certificate, null, null, null, $dropPendingUpdates);
+
+            if (empty($allowedUpdate)) {
+                $allowedUpdate = [
+                    'message',
+                    'edited_message',
+                    'channel_post',
+                    'edited_channel_post',
+                    'inline_query',
+                    'chosen_inline_result',
+                    'callback_query',
+                    'shipping_query',
+                    'pre_checkout_query',
+                    'poll',
+                    'poll_answer',
+                    'my_chat_member',
+                    'chat_member',
+                    'chat_join_request'
+                ];
+            }
+
+            if (!$this->telegram->setWebhook($url, $certificate, null, null, $allowedUpdate, $dropPendingUpdates)) {
+                throw new \Exception('Failed to set web hook');
+            }
+
 
             //create the hook lock file as all went well:
-            fclose(fopen($hookFileName, "a"));
+            $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
+            fclose(fopen($hookFileName, "w+"));
 
             $this->log('web hook set');
         } else {
@@ -118,7 +141,7 @@ class GuardeBot
         }
         $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
         if (file_exists($hookFileName)) {
-            $hookFilePointer = fopen($hookFileName, 'a');
+            $hookFilePointer = fopen($hookFileName, 'w+');
             fclose($hookFilePointer);
             unlink($hookFileName);
         }
@@ -157,53 +180,10 @@ class GuardeBot
             return;
         }
 
-        $messageChatId = null;
-
-        if ($this->tryGetMessageChatId($update, $messageChatId)) {
-            if ($messageChatId == $this->logChatId) {
-                //ignore updates from the debug log group
-                return true;
-            }
-        }
-
-        set_exception_handler([$this, 'handleException']);
-        set_error_handler([$this, 'handleError']);
-        $previousErrorReportingLevel = error_reporting(E_ALL);
-
-        try {
-            if (isset($update->message)) {
-                //handle update message
                 $this->processUpdate($update);
-            }
-
             $this->setLastHandledUpdateInfo($updateId, time());
-        } catch (\Throwable $e) {
-            $this->handleException($e);
-        } catch (\Exception $e) {
-            $this->handleException($e);
-        } finally {
-            error_reporting($previousErrorReportingLevel);
-            restore_error_handler();
-            restore_exception_handler();
-        }
-
-        if (isset($this->lastHandledException)) {
-            throw $this->lastHandledException;
-        }
 
         return true;
-    }
-
-    private $lastHandledException;
-    private function handleError($errno, $errstr, $errfile, $errline)
-    {
-        throw new \ErrorException($errstr, $errno, 0, $errfile, $errline);
-    }
-
-    private function handleException(\Throwable $e)
-    {
-        $this->lastHandledException = $e;
-        $this->log($e, 'handleException');
     }
 
     /**
@@ -212,7 +192,7 @@ class GuardeBot
      */
     private function processUpdate($update)
     {
-        $message = isset($update->message->text) ? $update->message->text : '';
+        $message = (isset($update->message) && isset($update->message->text)) ? $update->message->text : '';
         $spamValidator = new MlSpamTextValidator();
         $isValid = $spamValidator->validate($message);
         $commandText = '';
@@ -291,12 +271,12 @@ class GuardeBot
             case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::CMD_BAN_MESSAGE_AUTHOR):
                 //the behavior here is to considere this command is in a reply of the message to mark the author as spammer
                 $messageAuthorInfo = null;
-                if ($this->tryGetMessageAuthorInfo($update, $messageAuthorInfo)) {
+                if (TelegramHelper::tryGetMessageAuthorInfo($update, $messageAuthorInfo)) {
                     if (!MastersManager::getInstance()->has($messageAuthorInfo->userId)) {
                         SpammersManager::getInstance()->add($messageAuthorInfo->userId, $messageAuthorInfo->userName, $messageAuthorInfo->firstName, $messageAuthorInfo->lastName);
-                        $authorDisplayName = $this->getBestMessageAuthorDisplayName($messageAuthorInfo);
+                        $authorDisplayName = TelegramHelper::getBestMessageAuthorDisplayName($messageAuthorInfo);
                         $messageChatId = null;
-                        if ($this->tryGetMessageChatId($update, $messageChatId)) {
+                        if (TelegramHelper::tryGetMessageChatId($update, $messageChatId)) {
                             if ($this->banChatMember($messageChatId, $messageAuthorInfo)) {
                                 $this->say($messageChatId, GuardeBotMessagesBase::get(GuardeBotMessagesBase::ACK_BAN_MESSAGE_AUTHOR, [$authorDisplayName]));
                             }
@@ -308,99 +288,5 @@ class GuardeBot
                 $this->log('unrecognized command : ' . $commandText);
                 break;
         }
-    }
-
-    private function banChatMember($chatId, $memberInfo)
-    {
-        if ($this->telegram->banChatMember(['chat_id' => $chatId, 'user_id' => $memberInfo->userId, 'until_date' => 0, 'revoke_messages' => true])) {
-            $authorDisplayName = $this->getBestMessageAuthorDisplayName($memberInfo);
-            return true;
-        }
-        return false;
-    }
-
-    private function getBestMessageAuthorDisplayName($messageAuthorInfo)
-    {
-        $displayName = '';
-
-        if (!empty($messageAuthorInfo->firstName)) {
-            $displayName .= $messageAuthorInfo->firstName;
-        }
-
-        if (!empty($messageAuthorInfo->lastName)) {
-            if (!empty($displayName)) {
-                $displayName .= ' ';
-            }
-            $displayName .= $messageAuthorInfo->lastName;
-        }
-
-        if (!empty($messageAuthorInfo->userName)) {
-            if (!empty($displayName)) {
-                $displayName .= ' ';
-            }
-            $displayName .= ('(@' . $messageAuthorInfo->userName . ')');
-        }
-
-        return $displayName;
-    }
-
-    private function tryGetMessageChatId($update, &$chatId): bool
-    {
-        if (
-            isset($update->message)
-            && isset($update->message->chat)
-            && isset($update->message->chat->id)
-        ) {
-            $chatId = $update->message->chat->id;
-            return true;
-        }
-        return false;
-    }
-
-    private function tryGetReplyToMessageText($update, &$message): bool
-    {
-        if (
-            isset($update->message)
-            && isset($update->message->reply_to_message)
-            && !empty($update->message->reply_to_message->text)
-        ) {
-            $message = $update->message->reply_to_message->text;
-            return true;
-        }
-        return false;
-    }
-
-    private function tryGetMessageAuthorInfo($update, &$messageAuthorInfo)
-    {
-        if (
-            isset($update->message)
-            && isset($update->message->reply_to_message)
-        ) {
-            $from = null;
-            if (isset($update->message->reply_to_message->forward_from)) {
-                $from = $update->message->reply_to_message->forward_from;
-            } else {
-                $from = $update->message->reply_to_message->from;
-            }
-
-            if (isset($from)) {
-                return $this->tryGetMemberInfoFromStructure($from, $messageAuthorInfo);
-            }
-        }
-        return false;
-    }
-
-    private function tryGetMemberInfoFromStructure($from, &$memberInfo)
-    {
-        if (isset($from)) {
-            $memberInfo = (object)[
-                'userId' => $from->id,
-                'userName' => !empty($from->username) ? $from->username : '',
-                'firstName' => !empty($from->first_name) ? $from->first_name : '',
-                'lastName' => !empty($from->last_name) ? $from->last_name : ''
-            ];
-            return true;
-        }
-        return false;
     }
 }

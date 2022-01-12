@@ -14,11 +14,11 @@ class ArrayHelper
      */
     public static function toObject($array)
     {
-        if (!isset($array)) {
-            return null;
+        if (!is_array($array)) {
+            return $array;
         }
 
-        $obj = (object)$array;
+        $obj = (object)(new \stdClass());
         foreach ($array as $k => $v) {
             if (strlen($k)) {
                 if (is_array($v)) {

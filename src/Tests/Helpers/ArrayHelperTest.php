@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 require_once '../vendor/autoload.php';
 
-use PHPUnit\Framework\TestCase;
+use TelegramGuardeBot\Tests\GuardeBotTestCase;
 use TelegramGuardeBot\Helpers\ArrayHelper;
 
-final class ArrayHelperTest extends TestCase
+final class ArrayHelperTest extends GuardeBotTestCase
 {
     public function testToObjectConvertAnArrayToAnObject(): void
     {

@@ -67,14 +67,14 @@ class Telegram
      * Constant for type Contact.
      */
     const CONTACT = 'contact';
-	/**
-	 * Constant for type New Chat Member
-	 */
-	const NEW_CHAT_MEMBER = 'new_chat_member';
-	 /**
-	 * Constant for type Left Chat Member
-	 */
-	const LEFT_CHAT_MEMBER = 'left_chat_member';
+    /**
+     * Constant for type New Chat Member
+     */
+    const NEW_CHAT_MEMBER = 'new_chat_member';
+    /**
+     * Constant for type Left Chat Member
+     */
+    const LEFT_CHAT_MEMBER = 'left_chat_member';
     /**
      * Constant for type Channel Post.
      */
@@ -208,7 +208,7 @@ class Telegram
     {
         return $this->endpoint('copyMessage', $content);
     }
-    
+
     /// Forward a message
 
     /**
@@ -1241,6 +1241,49 @@ class Telegram
     {
         return $this->endpoint('leaveChat', $content);
     }
+    /// Ban Chat Member
+
+    /**
+     * Use this method to ban a user in a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the chat on their own using invite links, etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns <em>True</em> on success.<br/>Values inside $content:<br/>
+     * <table>
+     * <tr>
+     * <td><strong>Parameters</strong></td>
+     * <td><strong>Type</strong></td>
+     * <td><strong>Required</strong></td>
+     * <td><strong>Description</strong></td>
+     * </tr>
+     * <tr>
+     * <td>chat_id</td>
+     * <td>Integer or String</td>
+     * <td>Yes</td>
+     * <td>Unique identifier for the target group or username of the target supergroup (in the format <code>@supergroupusername</code>)</td>
+     * </tr>
+     * <tr>
+     * <td>user_id</td>
+     * <td>Integer</td>
+     * <td>Yes</td>
+     * <td>Unique identifier of the target user</td>
+     * </tr>
+     * <tr>
+     * <td>until_date</td>
+     * <td>Integer</td>
+     * <td>Optional</td>
+     * <td>Date when the user will be unbanned, unix time. If user is banned for more than <em366</em> days or less than <em>30</em> seconds from the current time they are considered to be banned forever. Applied for supergroups and channels only.</td>
+     * </tr>
+     * <tr>
+     * <td>revoke_messages</td>
+     * <td>Boolean</td>
+     * <td>Optional</td>
+     * <td>Pass <em>True</em> to delete all messages from the chat for the user that is being removed. If False, the user will be able to see messages in the group that were sent before the user was removed. Always True for supergroups and channels.</td>
+     * </tr>
+     * </table>
+     * \param $content the request parameters as array
+     * \return the JSON Telegram's reply.
+     */
+    public function banChatMember(array $content)
+    {
+        return $this->endpoint('banChatMember', $content);
+    }
 
     /// Unban Chat Member
 
@@ -1716,14 +1759,36 @@ class Telegram
      * If you'd like to make sure that the Webhook request comes from Telegram, we recommend using a secret path in the URL, e.g. https://www.example.com/<token>. Since nobody else knows your botâ€˜s token, you can be pretty sure itâ€™s us.
      * \param $url String HTTPS url to send updates to. Use an empty string to remove webhook integration
      * \param $certificate InputFile Upload your public key certificate so that the root certificate in use can be checked
+     * \param $ipAddress String The fixed IP address which will be used to send webhook requests instead of the IP address resolved through DNS
+     * \param $maxConnections int Maximum allowed number of simultaneous HTTPS connections to the webhook for update delivery, 1-100. Defaults to 40. Use lower values to limit the load on your bot's server, and higher values to increase your bot's throughput.
+     * \param $allowedUpdate bool A JSON-serialized list of the update types you want your bot to receive. For example, specify [“message”, “edited_channel_post”, “callback_query”] to only receive updates of these types. See Update for a complete list of available update types. Specify an empty list to receive all update types except chat_member (default). If not specified, the previous setting will be used. Please note that this parameter doesn't affect updates created before the call to the setWebhook, so unwanted updates may be received for a short period of time.
+     * \param $dropPendingUpdates bool Pass True to drop all pending updates
      * \return the JSON Telegram's reply.
      */
-    public function setWebhook($url, $certificate = '', $dropPendingUpdates)
+    public function setWebhook($url, $certificate = null, $ipAddress = null, $maxConnections = null, $allowedUpdate = null, $dropPendingUpdates = false)
     {
-        if ($certificate == '') {
-            $requestBody = ['url' => $url, 'drop_pending_updates' => $dropPendingUpdates];
-        } else {
-            $requestBody = ['url' => $url, 'certificate' => "@$certificate", 'drop_pending_updates' => $dropPendingUpdates];
+        $requestBody = [];
+
+        $requestBody += ['url' => $url];
+
+        if (!empty($certificate)) {
+            $requestBody += ['certificate' => "@$certificate"];
+        }
+
+        if (isset($ipAddress)) {
+            $requestBody += ['ip_address' => $ipAddress];
+        }
+
+        if (isset($maxConnections)) {
+            $requestBody += ['max_connections' => $maxConnections];
+        }
+
+        if (isset($allowedUpdate)) {
+            $requestBody += ['allowed_updates' => $allowedUpdate];
+        }
+
+        if ($dropPendingUpdates == true) {
+            $requestBody += ['drop_pending_updates' => $dropPendingUpdates];
         }
 
         return $this->endpoint('setWebhook', $requestBody, true);
@@ -1791,7 +1856,7 @@ class Telegram
             return @$this->data['edited_message']['text'];
         }
 
-		$message = $this->data['message'];
+        $message = $this->data['message'];
         return @(isset($message['text']) ? $message['text'] : null);
     }
 
@@ -1979,14 +2044,14 @@ class Telegram
 			return $this->data['callback_query']['from'];
         }
         if ($type == self::CHANNEL_POST) {
-			return $this->data['channel_post']['from'];
+            return $this->data['channel_post']['from'];
         }
         if ($type == self::EDITED_MESSAGE) {
-			return $this->data['edited_message']['from'];
+            return $this->data['edited_message']['from'];
         }
-		
-		return $this->data['message']['from'];
-	}
+
+        return $this->data['message']['from'];
+    }
 
     /// Get the location in the message
     public function Location()
@@ -3178,10 +3243,10 @@ class Telegram
         if (isset($update['message']['document'])) {
             return self::DOCUMENT;
         }
-		if (isset($update['message']['new_chat_member'])) {
+        if (isset($update['message']['new_chat_member'])) {
             return self::NEW_CHAT_MEMBER;
         }
-		if (isset($update['message']['left_chat_member'])) {
+        if (isset($update['message']['left_chat_member'])) {
             return self::LEFT_CHAT_MEMBER;
         }
         if (isset($update['channel_post'])) {
@@ -3202,7 +3267,7 @@ class Telegram
         curl_setopt($ch, CURLOPT_HEADER, false);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         if ($post) {
-			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($content));
         }

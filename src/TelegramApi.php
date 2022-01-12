@@ -2,7 +2,7 @@
 
 namespace TelegramGuardeBot;
 
-use ErrorException;
+use TelegramGuardeBot\Helpers\ArrayHelper;
 
 require_once('Telegram.php');
 
@@ -39,24 +39,16 @@ class TelegramApi
     private static function getResultOrThrow($response)
     {
         if (!TelegramApi::isOk($response)) {
-            throw new ErrorException(TelegramApi::getErrorMessage($response));
+            throw new \ErrorException(TelegramApi::getErrorMessage($response));
         }
-        return ((object)$response)->result;;
+        return ArrayHelper::toObject(((object)$response)->result);
     }
 
-    public function getMe()
-    {
-        return TelegramApi::getResultOrThrow($this->api->getMe());
-    }
 
-    public function sendMessage(array $content)
-    {
-        return TelegramApi::getResultOrThrow($this->api->sendMessage($content));
-    }
 
-    public function kickChatMember(array $content)
+    public function answerCallbackQuery(array $content)
     {
-        return TelegramApi::getResultOrThrow($this->api->kickChatMember($content));
+        return TelegramApi::getResultOrThrow($this->api->answerCallbackQuery($content));
     }
 
     public function banChatMember(array $content)
@@ -64,14 +56,9 @@ class TelegramApi
         return TelegramApi::getResultOrThrow($this->api->banChatMember($content));
     }
 
-    public function unbanChatMember(array $content)
+    public function deleteMessage(array $content)
     {
-        return TelegramApi::getResultOrThrow($this->api->unbanChatMember($content));
-    }
-
-    public function setWebhook($url, $certificate = '', $dropPendingUpdates = false)
-    {
-        return TelegramApi::getResultOrThrow($this->api->setWebhook($url, $certificate, $dropPendingUpdates));
+        return TelegramApi::getResultOrThrow($this->api->deleteMessage($content));
     }
 
     public function deleteWebhook($dropPendingUpdates = false)
@@ -79,8 +66,38 @@ class TelegramApi
         return TelegramApi::getResultOrThrow($this->api->deleteWebhook($dropPendingUpdates));
     }
 
+    public function getChatMember(array $content)
+    {
+        return TelegramApi::getResultOrThrow($this->api->getChatMember($content));
+    }
+
+    public function getMe()
+    {
+        return TelegramApi::getResultOrThrow($this->api->getMe());
+    }
+
     public function getWebhookInfo()
     {
         return TelegramApi::getResultOrThrow($this->api->getWebhookInfo());
+    }
+
+    public function restrictChatMember(array $content)
+    {
+        return TelegramApi::getResultOrThrow($this->api->restrictChatMember($content));
+    }
+
+    public function sendMessage(array $content)
+    {
+        return TelegramApi::getResultOrThrow($this->api->sendMessage($content));
+    }
+
+    public function setWebhook($url, $certificate = '', $dropPendingUpdates = false)
+    {
+        return TelegramApi::getResultOrThrow($this->api->setWebhook($url, $certificate, $dropPendingUpdates));
+    }
+
+    public function unbanChatMember(array $content)
+    {
+        return TelegramApi::getResultOrThrow($this->api->unbanChatMember($content));
     }
 }
