@@ -3,5 +3,4 @@
 Requires PHP >= 7.4
 
 Running the unit tests :
-cd src
-../vendor/bin/phpunit --bootstrap ../vendor/autoload.php Tests
+`./vendor/bin/phpunit --verbose --bootstrap ./vendor/autoload.php  src/Tests`

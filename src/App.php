@@ -45,7 +45,7 @@ class App
             default:
                 throw new \ErrorException('Unsupported locale');
         }
-        require_once('src/i18n/GuardeBotMessages_' . $this->locale . '.php');
+        require_once fromAppSource('/i18n/GuardeBotMessages_' . $this->locale . '.php');
 
         $this->bot = new GuardeBot(new TelegramApi($this->botToken, $this->enableApiLogging), $this->locale, $this->logChatId);
 

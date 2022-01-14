@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-require_once '../vendor/autoload.php';
-
 use TelegramGuardeBot\Tests\GuardeBotTestCase;
 use TelegramGuardeBot\Helpers\ArrayHelper;
 

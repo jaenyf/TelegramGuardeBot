@@ -4,7 +4,7 @@ namespace TelegramGuardeBot;
 
 use TelegramGuardeBot\Helpers\ArrayHelper;
 
-require_once('Telegram.php');
+require_once fromAppSource('Telegram.php');
 
 /**
  * A bridge to interact with the Telegram Bot API
