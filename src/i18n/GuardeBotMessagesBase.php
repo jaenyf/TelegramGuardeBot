@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot\i18n;
 
+use TelegramGuardeBot\Helpers\MarkdownHelper;
+
 class GuardeBotMessagesBase
 {
     private static $instance = null;
@@ -33,10 +35,16 @@ class GuardeBotMessagesBase
     {
         $result = self::getInstance()->getByIdentifier($identifier);
 
+        $shouldEscapeMarkdownParameters = (strpos($identifier, 'MARKDOWN') >=0);
+
         if (isset($parameters)) {
             $parameterCount = 0;
             foreach ($parameters as $parameter) {
                 ++$parameterCount;
+                if($shouldEscapeMarkdownParameters)
+                {
+                    $parameter = MarkdownHelper::escape(empty($parameter) ? '' : (string)$parameter);
+                }
                 $result = str_replace(('%' . $parameterCount), $parameter, $result);
             }
         }
@@ -91,6 +99,25 @@ class GuardeBotMessagesBase
 
     /**
      * The acknoledge of a banned message author
+     * @param %1 member display name
      */
     public const ACK_BAN_MESSAGE_AUTHOR = 'ACK_BAN_MESSAGE_AUTHOR %1';
+
+    /**
+     * The greetings markdown message to welcome a member and require him to click a button under a specified amount of time
+     * @param %1 member display name
+     * @param %2 member id
+     * @param %1 time in seconds
+     */
+    public const NEW_MEMBER_VALIDATION_MARKDOWN_GREETINGS = 'NEW_MEMBER_VALIDATION_MARKDOWN_GREETINGS %1 %2 %3';
+
+    /**
+     * The text displayed when another member click the join button
+     */
+    public const NEW_MEMBER_VALIDATION_OTHER_MEMBER_CLICK_ERROR_MESSAGE = 'NEW_MEMBER_VALIDATION_OTHER_MEMBER_CLICK_ERROR_MESSAGE %1';
+
+    /**
+     * The text displayed on the button a new member has to click to join
+     */
+    public const NEW_MEMBER_VALIDATION_BUTTON_TEXT = 'NEW_MEMBER_VALIDATION_BUTTON_TEXT';
 }

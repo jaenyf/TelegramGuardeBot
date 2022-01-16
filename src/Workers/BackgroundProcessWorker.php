@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot\Workers;
 
-include_once 'Support/Str.php';
+include_once fromAppSource('Support/Str.php');
+
+use TelegramGuardeBot\Workers\BackgroundProcessInstanciator;
+use TelegramGuardeBot\Log\GuardeBotLogger;
 
 /**
  * This class is used to handle background worker on a non-threaded environment
@@ -22,14 +25,22 @@ abstract class BackgroundProcessWorker
     protected bool $isSingleRun;
     protected int $sleepSeconds;
     private bool $isStarted;
+    private bool $isDone;
     private string $uid;
+    private array $additionalRegisteredIncludes;
 
-    protected function __construct()
+    //If set avoid constructing but use it to retrieve an existing instance
+    private ?BackgroundProcessInstanciator $instanciator;
+
+    protected function __construct(?BackgroundProcessInstanciator $instanciator)
     {
         $this->isSingleRun = false;
-        $this->sleepSeconds = 3;
+        $this->sleepSeconds = 1;
         $this->isStarted = false;
-        $this->uid = uniqid();
+        $this->isDone = false;
+        $this->instanciator = $instanciator;
+        $this->additionalRegisteredIncludes = [];
+        $this->uid = str_pad('' . uniqid() . random_int(0, PHP_INT_MAX), 19, '0');
     }
 
     public function getUid(): string
@@ -37,9 +48,30 @@ abstract class BackgroundProcessWorker
         return $this->uid;
     }
 
+    public function setUid($uid)
+    {
+        if(isset($this->uid))
+        {
+            throw new \ErrorException("Can not change worker uid");
+        }
+
+        $this->uid = $uid;
+    }
+
+    /**
+     * Whether or not the task has been started
+     */
     public function isStarted(): bool
     {
         return $this->isStarted;
+    }
+
+    /**
+     * Whether or not the task has been run, stopped and is done
+     */
+    public function isDone(): bool
+    {
+        return $this->isDone;
     }
 
     public function withSingleRun(): BackgroundProcessWorker
@@ -60,17 +92,33 @@ abstract class BackgroundProcessWorker
         return $this;
     }
 
+    public function withAdditionalInclude(string $includeFileName)
+    {
+        $this->additionalRegisteredIncludes[] = $includeFileName;
+        return $this;
+    }
+
     /**
      * Override this function with the code the worker has to do
      */
     public abstract function do();
 
     /**
+     * Override this function with the code the worker has to do before its main work
+     */
+    public function setUp() {}
+
+    /**
+     * Override this function with the code the worker has to do after its main work
+     */
+    public function tearDown() {}
+
+    /**
      * Return the complete file path of our .proc file
      */
     protected function getProcFilePath(): string
     {
-        return '_worker-' . $this->getUid() . '.proc.php';
+        return '.bpw-' . $this->getUid() . '.proc.php';
     }
 
     protected function canStillRun(): bool
@@ -84,38 +132,56 @@ abstract class BackgroundProcessWorker
 
     private function innerStart()
     {
+        $this->setUp();
         do {
             touch(__FILE__);
             $this->do();
             sleep($this->sleepSeconds);
         } while ($this->canStillRun());
         $this->stop();
+        $this->tearDown();
     }
 
     public function stop()
     {
-        if (file_exists($this->getProcFilePath())) {
+        $this->isStarted = false;
+        $this->isDone = true;
+
+        if (file_exists($this->getProcFilePath()))
+        {
             unlink($this->getProcFilePath());
         }
-        $this->isStarted = false;
     }
 
+    /**
+     * Start a new process that will execute the do method in background
+     */
     public function start()
     {
+        $reflectionClass = new \ReflectionClass($this);
+        $className = $reflectionClass->getName();
+
         if ($this->isStarted()) {
             throw new \ErrorException('Already started');
         }
 
         $procFilePath = $this->getProcFilePath();
 
-        $reflectionClass = new \ReflectionClass($this);
-        $className = $reflectionClass->getName();
 
-        $foudndUses = [];
+
+
+        $additinalIncludes = [];
+
+        foreach($this->additionalRegisteredIncludes as $includeFileName)
+        {
+            array_push($additinalIncludes, "include_once '" . str_replace('\\', '/', $includeFileName) . "';");
+        }
+
+        $foundUses = [];
         foreach (file($reflectionClass->getFileName()) as $lineIndex => $line) {
             $trimmedLine = trim($line);
             if (str_starts_with($trimmedLine, 'use ')) {
-                array_push($foudndUses, $trimmedLine);
+                array_push($foundUses, $trimmedLine);
             }
         }
 
@@ -128,11 +194,13 @@ abstract class BackgroundProcessWorker
             . '//Created by ' . $className . "\r\n\r\n"
             . 'ini_set(\'display_errors\', \'1\');' . "\r\n"
             . 'error_reporting(E_ALL);' . "\r\n"
-            . 'require_once str_replace(\'\\\\\', \'/\',__DIR__) . \'/../vendor/autoload.php\';' . "\r\n"
+            . 'require_once \'src/Requires.php\';'. "\r\n"
+            . 'require_once str_replace(\'\\\\\', \'/\',__DIR__) . \'/vendor/autoload.php\';' . "\r\n"
             . 'include_once \''. str_replace('\\', '/', $reflectionClass->getFileName()).'\';' . "\r\n"
-            . implode("\r\n", $foudndUses) . "\r\n"
+            . implode("\r\n", $additinalIncludes) . "\r\n"
+            . implode("\r\n", $foundUses) . "\r\n"
             . 'use ' . $className . ';' . "\r\n"
-            . ($avoidConstruction ? '' : '$instance = ' . self::createBestConstructorCall($this, $reflectionClass)) . "\r\n"
+            . '$instance = ' . self::createBestConstructorCall($this->uid, $this, $reflectionClass, 0) . "\r\n"
             . $loggerClass->name . '::getInstance();' . "\r\n"
             . $bodyText;
 
@@ -146,10 +214,10 @@ abstract class BackgroundProcessWorker
 
         //Note: Avoid using PHP_BINARY constant here as it may result in strange behavior if it uses the php cgi version:
         //See: https://bugs.php.net/bug.php?id=24759
-        $command = 'php -f "' . $procFilePath . '" ';
+        $command = 'php "' . $procFilePath . '" ';
         $isUnixCommand = true;
         if (substr(php_uname(), 0, 7) == "Windows"){
-            $command = 'start /B '. $command;
+            $command = 'start "" /B '. $command . " >nul 2>nul &";
             $isUnixCommand = false;
         }
         else {
@@ -159,45 +227,73 @@ abstract class BackgroundProcessWorker
         $bodyText = $bodyText . "\r\n\r\n" . '//started with: ' . $command . "\r\n\r\n";
         $bodyText = $bodyText . "\r\n" . '?>' . "\r\n";
 
-        if (false === fwrite($scriptFile, $bodyText)) {
+        if (false === fwrite($scriptFile, $bodyText))
+        {
             fclose($scriptFile);
             return false;
         }
 
-        if (false === fclose($scriptFile)) {
+        if (false === fclose($scriptFile))
+        {
             return false;
         }
 
-
-        if (!$isUnixCommand){
-            pclose(popen($command, "r"));
+        if (!$isUnixCommand)
+        {
+            $popenResult = popen($command, "w");
+            if (false === $popenResult)
+            {
+                $this->isStarted = false;
+                return false;
+            }
+            else
+            {
+                pclose($popenResult);
+            }
         }
-        else {
-            exec($command);
-        }
-
-
-        if (false === exec($command)) {
-            return false;
+        else
+        {
+            if (false === exec($command))
+            {
+                $this->isStarted = false;
+                return false;
+            }
         }
 
         $this->isStarted = true;
         return true;
     }
 
-    private static function createBestConstructorCall(BackgroundProcessWorker $instance, \ReflectionClass $class)
+    private static function createBestConstructorCall($uid, BackgroundProcessWorker $instance, \ReflectionClass $class, int $deepLevel)
     {
-        $ctor = $class->getConstructor();
-        $arguments = [];
-        foreach ($ctor->getParameters() as $parameter) {
-            if ($class->hasProperty($parameter->name)) {
-                $property = $class->getProperty($parameter->name);
-                $property->setAccessible(true);
-                array_push($arguments, json_encode($property->getValue($instance), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_LINE_TERMINATORS));
+        $result = '';
+        if ($class->hasMethod('getInstance')) {
+            $getInstanceMethod = $class->getMethod('getInstance');
+            if ($getInstanceMethod->isPublic() && $getInstanceMethod->isStatic()) {
+                //Singleton
+                if (count($getInstanceMethod->getParameters()) == 0) {
+                    $result = '' . $class->name . '::getInstance()';
+                }
             }
-        }
+        } else if (isset($instance->instanciator)) {
+            //Use the instanciator instead
+            $result = (static::createBestConstructorCall($uid, $instance->instanciator, new \ReflectionClass($instance->instanciator), $deepLevel + 1)
+                . '->getBackgroundProcess(\'' . $uid . '\')');
+        } else {
+            //Try construct the instance with an appropriated ctor call
+            $ctor = $class->getConstructor();
+            $arguments = [];
+            foreach ($ctor->getParameters() as $parameter) {
+                if ($class->hasProperty($parameter->name)) {
+                    $property = $class->getProperty($parameter->name);
+                    $property->setAccessible(true);
+                    array_push($arguments, json_encode($property->getValue($instance), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_LINE_TERMINATORS));
+                }
+            }
 
-        return 'new ' . $class->name . '(' . implode(',', $arguments) . ');';
+            $result = 'new ' . $class->name . '(' . implode(',', $arguments) . ')';
+        }
+        return $result . ($deepLevel == 0 ? ';' : '');
     }
 
     private static function extractCode(object $instance, string $name, int $deepLevel, bool $declareGlobalInstance = false): string

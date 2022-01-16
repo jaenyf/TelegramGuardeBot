@@ -19,7 +19,10 @@ class GuardeBotMessages extends GuardeBotMessagesBase
             self::FCMD_MARK_AS_SPAM => 'Ceci est un spam',
             self::CMD_BAN_MESSAGE_AUTHOR => 'ban',
             self::FCMD_BAN_MESSAGE_AUTHOR => 'Bannis cet auteur',
-            self::ACK_BAN_MESSAGE_AUTHOR => 'L\'utilisateur "%1" a été banni !'
+            self::ACK_BAN_MESSAGE_AUTHOR => 'L\'utilisateur "%1" a été banni !',
+            self::NEW_MEMBER_VALIDATION_MARKDOWN_GREETINGS => '_[@%1](tg://user?id=%2)_, bienvenue \\! Clique sur le boutton ci\\-dessous dans le temps imparti afin de rejoindre cet endroit \\! Merci \\! \\(%3 seconds\\)',
+            self::NEW_MEMBER_VALIDATION_OTHER_MEMBER_CLICK_ERROR_MESSAGE => 'Seul l\'utilisateur %1 peut répondre à ce message',
+            self::NEW_MEMBER_VALIDATION_BUTTON_TEXT => 'Je rejoins cet endroit !'
         );
     }
 }
