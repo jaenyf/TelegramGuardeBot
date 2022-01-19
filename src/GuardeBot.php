@@ -11,7 +11,7 @@ use TelegramGuardeBot\Managers\Masters\MastersManager;
 use TelegramGuardeBot\Managers\Spams\SpammersManager;
 use TelegramGuardeBot\Helpers\ArrayHelper;
 use TelegramGuardeBot\Helpers\TelegramHelper;
-
+use TelegramGuardeBot\Actions\MessageActionProcessor;
 
 
 /**
@@ -179,8 +179,10 @@ class GuardeBot
             return;
         }
 
-                $this->processUpdate($update);
-            $this->setLastHandledUpdateInfo($updateId, time());
+        (new MessageActionProcessor())->process(App::getInstance()->messagesActions, $update);
+
+        $this->processUpdate($update);
+        $this->setLastHandledUpdateInfo($updateId, time());
 
         return true;
     }
