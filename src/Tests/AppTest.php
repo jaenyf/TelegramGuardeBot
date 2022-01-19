@@ -70,6 +70,18 @@ final class AppTest extends GuardeBotTestCase
     /**
      * @group noSetUp
      */
+    public function testenvNameIsParsed(): void
+    {
+        //Act
+        $sut = static::initializeAndGetTestInstance();
+
+        //Assert
+        $this->assertThat($sut->envName, $this->equalTo("unitTests"));
+    }
+
+    /**
+     * @group noSetUp
+     */
     public function testBotTokenIsParsed(): void
     {
         //Act

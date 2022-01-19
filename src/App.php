@@ -16,6 +16,7 @@ class App
 
     private static $instance;
 
+    public string $envName;
     public string $botToken;
     public int $logChatId;
     public string $locale;
@@ -32,6 +33,7 @@ class App
 
         $config = json_decode(self::stripComments(file_get_contents($configFileName)), false);
 
+        $this->envName = $config->envName;
         $this->botToken = $config->botToken;
         $this->logChatId = $config->logChatId;
         $this->locale = strtoupper($config->locale);
