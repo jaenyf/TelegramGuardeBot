@@ -7,18 +7,21 @@ namespace TelegramGuardeBot;
 use TelegramGuardeBot\GuardeBot;
 use TelegramGuardeBot\TelegramApi;
 use TelegramGuardeBot\Log\GuardeBotLogger;
+use TelegramGuardeBot\DependenciesInitialization;
+use Psr\Log\LoggerInterface;
 
 class App
 {
     private const DefaultConfigFileName = 'app.config';
 
-    private static App $instance;
+    private static $instance;
 
     public string $botToken;
     public int $logChatId;
     public string $locale;
     public bool $enableApiLogging;
     private GuardeBot $bot;
+    private $diContainer;
 
     private function __construct(string $configFileName)
     {
@@ -63,9 +66,10 @@ class App
         return preg_replace('![ \t]*//.*[ \t]*[\r\n]!', '', $text);
     }
 
-    public static function initialize($configFileName = null)
+    public static function initialize($configFileName = null, $diContainer = null)
     {
-        if (isset(self::$instance)) {
+        if (isset(self::$instance))
+        {
             throw new \ErrorException('Already initialized');
         }
 
@@ -74,15 +78,35 @@ class App
         }
 
         self::$instance = new App($configFileName);
+
+        self::$instance->diContainer = $diContainer ?? DependenciesInitialization::InitializeContainer(self::$instance->envName);
+
+    }
+
+    public static function isInitialized() : bool
+    {
+        return isset(self::$instance);
+    }
+
+    public static function dispose()
+    {
+        self::$instance = null;
     }
 
     public static function getInstance(): App
     {
-        if (!isset(self::$instance)) {
+        if (!self::isInitialized())
+        {
             throw new \ErrorException('Not initialized');
         }
 
         return self::$instance;
+    }
+
+
+    public function getLogger() : LoggerInterface
+    {
+        return $this->diContainer->get('logger');
     }
 
     public function getBot(): GuardeBot

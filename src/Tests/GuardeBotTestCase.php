@@ -7,26 +7,41 @@ namespace TelegramGuardeBot\Tests;
 require_once 'src/Requires.php';
 
 use PHPUnit\Framework\TestCase;
-
-use function PHPUnit\Framework\directoryExists;
+use DI\Container;
+use DI\ContainerBuilder;
+use TelegramGuardeBot\App;
 
 class GuardeBotTestCase extends TestCase
 {
-    public static function tearDownAfterClass(): void
-    {
-        parent::tearDownAfterClass();
+    protected const appConfigFileName = "src/Tests/AppTest.config";
 
-        if(directoryExists('logs'))
+    private static $isAppInitialized;
+    private static $logStub;
+
+    protected function setUp() : void
+    {
+        if(in_array("noSetUp", $this->getGroups()))
         {
-            if(file_exists('logs/GuardeBot.log'))
-            {
-                unlink('logs/GuardeBot.log');
-            }
-            $removeLogsFolder = (count(scandir('logs')) <= 2);
-            if($removeLogsFolder)
-            {
-                rmdir('logs');
-            }
+            return;
         }
+
+        if(!isset(self::$isAppInitialized))
+        {
+            self::$logStub = $this->createMock('Psr\Log\LoggerInterface');
+            App::initialize(self::appConfigFileName, $this->InitializeContainer());
+            self::$isAppInitialized = true;
+        }
+    }
+
+
+    public function InitializeContainer() : Container
+    {
+        $builder = new ContainerBuilder();
+
+        $builder->addDefinitions([
+            'logger' => self::$logStub
+        ]);
+
+        return $builder->build();
     }
 }

@@ -5,7 +5,6 @@ namespace TelegramGuardeBot;
 use ErrorException;
 use TelegramGuardeBot\TelegramApi;
 use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
-use TelegramGuardeBot\Log\GuardeBotLogger;
 use TelegramGuardeBot\Validators\MlSpamTextValidator;
 use TelegramGuardeBot\Learners\MlSpamTextLearner;
 use TelegramGuardeBot\Managers\Masters\MastersManager;
@@ -153,7 +152,7 @@ class GuardeBot
      */
     public function log($element, $title = null)
     {
-        GuardeBotLogger::getInstance()->debug($title, [$element]);
+        App::getInstance()->getLogger()->debug($title, [$element]);
     }
 
     public function say($chatId, $message)
