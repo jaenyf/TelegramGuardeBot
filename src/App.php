@@ -25,7 +25,8 @@ class App
 
     private function __construct(string $configFileName)
     {
-        if (!file_exists($configFileName)) {
+        if (!file_exists($configFileName))
+        {
             throw new \ErrorException('Configuration file not found');
         }
 
@@ -37,11 +38,13 @@ class App
         $this->enableApiLogging = $config->enableApiLogging;
 
 
-        if (empty($this->locale)) {
+        if (empty($this->locale))
+        {
             throw new \ErrorException('Missing locale');
         }
 
-        switch ($this->locale) {
+        switch ($this->locale)
+        {
             case 'FR':
             case 'EN':
                 break;
@@ -73,7 +76,8 @@ class App
             throw new \ErrorException('Already initialized');
         }
 
-        if (!isset($configFileName)) {
+        if (!isset($configFileName))
+        {
             $configFileName = App::DefaultConfigFileName;
         }
 
