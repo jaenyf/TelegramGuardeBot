@@ -21,6 +21,7 @@ class App
     public int $logChatId;
     public string $locale;
     public bool $enableApiLogging;
+    public array $messagesActions;
     private GuardeBot $bot;
     private $diContainer;
 
@@ -38,6 +39,7 @@ class App
         $this->logChatId = $config->logChatId;
         $this->locale = strtoupper($config->locale);
         $this->enableApiLogging = $config->enableApiLogging;
+        $this->messagesActions = $config->messagesActions;
 
 
         if (empty($this->locale))
