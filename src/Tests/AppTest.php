@@ -76,7 +76,7 @@ final class AppTest extends GuardeBotTestCase
         $sut = static::initializeAndGetTestInstance();
 
         //Assert
-        $this->assertThat($sut->envName, $this->equalTo("unitTests"));
+        $this->assertThat($sut->envName, $this->equalTo("CI"));
     }
 
     /**
@@ -88,7 +88,7 @@ final class AppTest extends GuardeBotTestCase
         $sut = static::initializeAndGetTestInstance();
 
         //Assert
-        $this->assertThat($sut->botToken, $this->equalTo("testBotToken123456"));
+        $this->assertThat($sut->botToken, $this->equalTo("1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"));
     }
 
     /**
@@ -124,6 +124,6 @@ final class AppTest extends GuardeBotTestCase
         $sut = static::initializeAndGetTestInstance();
 
         //Assert
-        $this->assertThat($sut->enableApiLogging, $this->equalTo(false));
+        $this->assertThat($sut->enableApiLogging, $this->equalTo(true));
     }
 }

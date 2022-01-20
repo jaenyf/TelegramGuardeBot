@@ -13,7 +13,7 @@ use TelegramGuardeBot\App;
 
 class GuardeBotTestCase extends TestCase
 {
-    protected const appConfigFileName = "src/Tests/AppTest.config";
+    protected const appConfigFileName = "app.config.ci";
 
     private static $isAppInitialized;
     private static $logStub;
