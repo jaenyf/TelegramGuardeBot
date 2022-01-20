@@ -65,14 +65,29 @@ class GuardeBotMessagesBase
     public const CMD_HEADER = 'CMD_HEADER';
 
     /**
+     * The header that will indentify a friendly command
+     */
+    public const FCMD_HEADER = 'FCMD_HEADER';
+
+    /**
      * The command to mark a message as spam
      */
     public const CMD_MARK_AS_SPAM = 'CMD_MARK_AS_SPAM';
 
     /**
+     * The friendly command to mark a message as spam
+     */
+    public const FCMD_MARK_AS_SPAM = 'FCMD_MARK_AS_SPAM';
+
+    /**
      * The command to ban a message author
      */
     public const CMD_BAN_MESSAGE_AUTHOR = 'CMD_BAN_MESSAGE_AUTHOR';
+
+    /**
+     * The friendly command to ban a message author
+     */
+    public const FCMD_BAN_MESSAGE_AUTHOR = 'FCMD_BAN_MESSAGE_AUTHOR';
 
     /**
      * The acknoledge of a banned message author

@@ -209,8 +209,8 @@ class GuardeBot
             //check if incoming user is marked as banned
             if (SpammersManager::getInstance()->has($newMember->userId) && !MastersManager::getInstance()->has($newMember->userId)) {
                 $messageChatId = null;
-                if ($this->tryGetMessageChatId($update, $messageChatId)) {
-                    $this->banChatMember($messageChatId, $newMember);
+                if (TelegramHelper::tryGetMessageChatId($update, $messageChatId)) {
+                    TelegramHelper::banChatMember($this->telegram, $messageChatId, $newMember);
                 }
             }
         } else {
@@ -230,13 +230,13 @@ class GuardeBot
             && isset($update->message->new_chat_member)
             && isset($update->message->new_chat_member->id)
         ) {
-            return $this->tryGetMemberInfoFromStructure($update->message->new_chat_member, $newMember);
+            return TelegramHelper::tryGetMemberInfoFromStructure($update->message->new_chat_member, $newMember);
         }
         return false;
     }
 
     /**
-     * Whether or not the given text is a command
+     * Whether or not the given text is a command or a friendly command
      * \param $text the text to analyse
      * \param $commandText the extracted command text
      */
@@ -245,40 +245,89 @@ class GuardeBot
         $commandHeader = GuardeBotMessagesBase::getInstance()->get(GuardeBotMessagesBase::CMD_HEADER);
         $matches = [];
         if (preg_match(
-            '/^(?i)(' . $commandHeader . ')\s*[!]*\s*[,;-]{0,1}\s*([\w\s]+)\s*[!]*\s*/',
+            '/^(?i)(' . preg_quote($commandHeader, '/') . ')([\w]+)\s*/',
             $text,
             $matches
-        )) {
+        ))
+        {
             $commandText = rtrim($matches[2]);
             return true;
         }
+        else
+        {
+            $friendlyCommandHeader = GuardeBotMessagesBase::getInstance()->get(GuardeBotMessagesBase::FCMD_HEADER);
+            $matches = [];
+            if (preg_match(
+                '/^(?i)(' . preg_quote($friendlyCommandHeader) . ')\s*[!]*\s*[,;-]{0,1}\s*([\w\s]+)\s*[!]*\s*/',
+                $text,
+                $matches
+            ))
+            {
+                $commandText = rtrim($matches[2]);
+                return true;
+            }
+        }
+
         return false;
     }
 
     private function processCommand($commandText, $update)
     {
         $loweredCommandText = strtolower($commandText);
-        switch ($loweredCommandText) {
+        switch ($loweredCommandText)
+        {
             case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::CMD_MARK_AS_SPAM):
+            case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::FCMD_MARK_AS_SPAM):
                 //the behavior here is to considere this command is in a reply of the message to mark as spam
-                $replyToMessageText = '';
-                if ($this->tryGetReplyToMessageText($update, $replyToMessageText)) {
-                    $learner = new MlSpamTextLearner();
-                    $learner->learn($replyToMessageText, false);
-                    $this->log($replyToMessageText, 'marked as spam !');
-                }
+                $commandAuthor = null;
+                if (TelegramHelper::tryGetMemberInfoFromStructure($update->message->from, $commandAuthor))
+                {
+                    //Only Masters can execute this command
+                    if (MastersManager::getInstance()->has($commandAuthor->userId))
+                    {
+                        $replyToMessageText = '';
+                        if (TelegramHelper::tryGetReplyToMessageText($update, $replyToMessageText))
+                        {
+                            $learner = new MlSpamTextLearner();
+                            $learner->learn($replyToMessageText, false);
 
+                            $spammer = null;
+                            if (TelegramHelper::tryGetMemberInfoFromStructure($update->message->reply_to_message->from, $spammer))
+                            {
+                                if (!MastersManager::getInstance()->has($spammer->userId))
+                                {
+                                    SpammersManager::getInstance()->add($spammer->userId, $spammer->userName, $spammer->firstName, $spammer->lastName);
+                                }
+                                $messageChatId = null;
+                                if (TelegramHelper::tryGetMessageChatId($update, $messageChatId))
+                                {
+                                    if (TelegramHelper::banChatMember($this->telegram, $messageChatId, $spammer))
+                                    {
+                                        $spammerDisplayName = TelegramHelper::getBestMessageAuthorDisplayName($spammer);
+                                        $this->say($messageChatId, GuardeBotMessagesBase::get(GuardeBotMessagesBase::ACK_BAN_MESSAGE_AUTHOR, [$spammerDisplayName]));
+                                    }
+                                }
+                            }
+                            $this->log($replyToMessageText, 'marked as spam !');
+                        }
+                    }
+                }
                 break;
             case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::CMD_BAN_MESSAGE_AUTHOR):
+            case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::FCMD_BAN_MESSAGE_AUTHOR):
                 //the behavior here is to considere this command is in a reply of the message to mark the author as spammer
                 $messageAuthorInfo = null;
-                if (TelegramHelper::tryGetMessageAuthorInfo($update, $messageAuthorInfo)) {
-                    if (!MastersManager::getInstance()->has($messageAuthorInfo->userId)) {
+                if (TelegramHelper::tryGetMessageAuthorInfo($update, $messageAuthorInfo))
+                {
+                    if (!MastersManager::getInstance()->has($messageAuthorInfo->userId))
+                    {
                         SpammersManager::getInstance()->add($messageAuthorInfo->userId, $messageAuthorInfo->userName, $messageAuthorInfo->firstName, $messageAuthorInfo->lastName);
-                        $authorDisplayName = TelegramHelper::getBestMessageAuthorDisplayName($messageAuthorInfo);
                         $messageChatId = null;
-                        if (TelegramHelper::tryGetMessageChatId($update, $messageChatId)) {
-                            if ($this->banChatMember($messageChatId, $messageAuthorInfo)) {
+                        if (TelegramHelper::tryGetMessageChatId($update, $messageChatId))
+                        {
+                            if (TelegramHelper::banChatMember($this->telegram, $messageChatId, $messageAuthorInfo))
+                            {
+                                $authorDisplayName = TelegramHelper::getBestMessageAuthorDisplayName($messageAuthorInfo);
                                 $this->say($messageChatId, GuardeBotMessagesBase::get(GuardeBotMessagesBase::ACK_BAN_MESSAGE_AUTHOR, [$authorDisplayName]));
                             }
                         }
@@ -286,7 +335,7 @@ class GuardeBot
                 }
                 break;
             default:
-                $this->log('unrecognized command : ' . $commandText);
+                $this->log('unrecognized command : \'' . $commandText . '\'');
                 break;
         }
     }

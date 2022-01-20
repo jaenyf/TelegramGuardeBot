@@ -31,11 +31,24 @@ class TelegramHelper
         return false;
     }
 
+    public static function tryGetReplyToMessageText($update, &$message): bool
+    {
+        if (
+            isset($update->message)
+            && isset($update->message->reply_to_message)
+            && !empty($update->message->reply_to_message->text)
+        ) {
+            $message = $update->message->reply_to_message->text;
+            return true;
+        }
+        return false;
+    }
+
 
     /**
      * Extract the telegram result from the response if its status is ok
      */
-    public static function extractTelegramResponseResult(array $response): false|object
+    public static function extractTelegramResponseResult(array $response)
     {
         if (isset($response)) {
             if (array_key_exists('ok', $response)) {

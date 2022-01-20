@@ -13,9 +13,12 @@ class GuardeBotMessages extends GuardeBotMessagesBase
         parent::__construct();
         $this->messages = array(
             self::SAY_WEBHOOK_SET_UP => 'Web hook set up !',
-            self::CMD_HEADER => 'Guarde',
-            self::CMD_MARK_AS_SPAM => 'This is a spam',
-            self::CMD_BAN_MESSAGE_AUTHOR => 'Ban this author',
+            self::CMD_HEADER => '/',
+            self::FCMD_HEADER => 'Guarde',
+            self::CMD_MARK_AS_SPAM => 'spam',
+            self::FCMD_MARK_AS_SPAM => 'This is a spam',
+            self::CMD_BAN_MESSAGE_AUTHOR => 'ban',
+            self::FCMD_BAN_MESSAGE_AUTHOR => 'Ban this author',
             self::ACK_BAN_MESSAGE_AUTHOR => 'User "%1" has been banned !'
         );
     }
