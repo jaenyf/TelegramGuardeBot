@@ -291,6 +291,11 @@ class GuardeBot
                             $learner = new MlSpamTextLearner();
                             $learner->learn($replyToMessageText, false);
 
+                            //delete command update message
+                            $this->telegram->deleteMessage(["message_id" => $update->message->message_id, "chat_id" => $update->message->chat->id], false);
+                            //delete spam message
+                            $this->telegram->deleteMessage(["message_id" => $update->message->reply_to_message->message_id, "chat_id" => $update->message->reply_to_message->chat->id], false);
+
                             $spammer = null;
                             if (TelegramHelper::tryGetMemberInfoFromStructure($update->message->reply_to_message->from, $spammer))
                             {

@@ -36,9 +36,9 @@ class TelegramApi
         return '(' . $response->error_code . ') ' . $response->description;
     }
 
-    private static function getResultOrThrow($response)
+    private static function getResultOrThrow($response, bool $throw = true)
     {
-        if (!TelegramApi::isOk($response)) {
+        if (!TelegramApi::isOk($response) && $throw) {
             throw new \ErrorException(TelegramApi::getErrorMessage($response));
         }
         return ArrayHelper::toObject(((object)$response)->result);
@@ -56,9 +56,9 @@ class TelegramApi
         return TelegramApi::getResultOrThrow($this->api->banChatMember($content));
     }
 
-    public function deleteMessage(array $content)
+    public function deleteMessage(array $content, bool $throw = true)
     {
-        return TelegramApi::getResultOrThrow($this->api->deleteMessage($content));
+        return TelegramApi::getResultOrThrow($this->api->deleteMessage($content), $throw);
     }
 
     public function deleteWebhook($dropPendingUpdates = false)
