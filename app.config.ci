@@ -1,0 +1,19 @@
+{
+    //config file for CI
+    "name": "CI",
+    "envName" : "CI",
+    "botToken": "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+    "logChatId": -123456789,
+    "locale": "EN",
+    "enableApiLogging": true,
+    "newMemberValidationTimeout": 30,
+    "messagesActions" : [
+        {
+            "chatId" : -123456789,
+            "chatFriendlyName" : "tests",
+            "onType" : "message",
+            "action" : "logToFile",
+            "fileName" : "tests.message.actions.lst"
+        }
+    ]
+}
