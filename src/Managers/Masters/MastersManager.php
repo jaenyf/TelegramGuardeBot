@@ -8,8 +8,8 @@ use TelegramGuardeBot\Managers\CsvMembersManager;
 
 class MastersManager extends CsvMembersManager
 {
-    private const GlobalListFileName = 'Masters.lst';
-    private const GlobalListLockFileName = 'Masters.lst.lock';
+    public const GlobalListFileName = 'Masters.lst';
+    public const GlobalListLockFileName = 'Masters.lst.lock';
 
     protected static function createInstance(): CsvMembersManager
     {

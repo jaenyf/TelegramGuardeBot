@@ -39,7 +39,7 @@ abstract class CsvMembersManager extends CsvManager
      * @return bool
      */
     public function add(
-        int|string $id,
+        $id,
         string $userName,
         string $firstName,
         string $lastName
@@ -54,7 +54,7 @@ abstract class CsvMembersManager extends CsvManager
     /**
      * Whether or not the given member id is present in the list
      */
-    public function has(int|string $id): bool
+    public function has($id): bool
     {
         if (!$this->isDataLoaded) {
             $this->loadFromFile();
