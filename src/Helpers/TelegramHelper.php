@@ -156,7 +156,6 @@ class TelegramHelper
     public static function banChatMember($telegram, $chatId, $memberInfo)
     {
         if ($telegram->banChatMember(['chat_id' => $chatId, 'user_id' => $memberInfo->userId, 'until_date' => 0, 'revoke_messages' => true])) {
-            $authorDisplayName = TelegramHelper::getBestMessageAuthorDisplayName($memberInfo);
             return true;
         }
         return false;
