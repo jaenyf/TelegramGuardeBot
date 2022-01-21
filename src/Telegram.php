@@ -2015,12 +2015,12 @@ class Telegram
 			return @$from['first_name'];
 		}
         return null;
-		
+
     }
 
     /// Get the last name of the user
     public function LastName()
-    {		
+    {
 		$from = $this->getBestUserFrom();
 		if(isset($from['last_name'])){
 			return @$from['last_name'];
@@ -2037,7 +2037,7 @@ class Telegram
 		}
         return null;
     }
-	
+
 	private function getBestUserFrom(){
 		$type = $this->getUpdateType();
         if ($type == self::CALLBACK_QUERY) {
@@ -2709,6 +2709,71 @@ class Telegram
     public function exportChatInviteLink(array $content)
     {
         return $this->endpoint('exportChatInviteLink', $content);
+    }
+
+
+    /// Approve Chat Join Request
+
+    /**
+     * Use this method to approve a chat join request. The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right. Returns True on success.
+     * <table>
+     * <tr>
+     * <td><strong>Parameters</strong></td>
+     * <td><strong>Type</strong></td>
+     * <td><strong>Required</strong></td>
+     * <td><strong>Description</strong></td>
+     * </tr>
+     * <tr>
+     * <td>chat_id</td>
+     * <td>Integer or String</td>
+     * <td>Yes</td>
+     * <td>Unique identifier for the target chat or username of the target channel (in the format \c \@channelusername)</td>
+     * </tr>
+     * <tr>
+     * <td>user_id</td>
+     * <td>Integer</td>
+     * <td>Yes</td>
+     * <td>Unique identifier of the target user</td>
+     * </tr>
+     * </table>
+     * \param $content the request parameters as array
+     * \return the JSON Telegram's reply.
+     */
+    public function approveChatJoinRequest(array $content)
+    {
+        return $this->endpoint('approveChatJoinRequest', $content);
+    }
+
+    /// Decline Chat Join Request
+
+    /**
+     * Use this method to decline a chat join request. The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right. Returns True on success.
+     * <table>
+     * <tr>
+     * <td><strong>Parameters</strong></td>
+     * <td><strong>Type</strong></td>
+     * <td><strong>Required</strong></td>
+     * <td><strong>Description</strong></td>
+     * </tr>
+     * <tr>
+     * <td>chat_id</td>
+     * <td>Integer or String</td>
+     * <td>Yes</td>
+     * <td>Unique identifier for the target chat or username of the target channel (in the format \c \@channelusername)</td>
+     * </tr>
+     * <tr>
+     * <td>user_id</td>
+     * <td>Integer</td>
+     * <td>Yes</td>
+     * <td>Unique identifier of the target user</td>
+     * </tr>
+     * </table>
+     * \param $content the request parameters as array
+     * \return the JSON Telegram's reply.
+     */
+    public function declineChatJoinRequest(array $content)
+    {
+        return $this->endpoint('declineChatJoinRequest', $content);
     }
 
     /// Set Chat Photo

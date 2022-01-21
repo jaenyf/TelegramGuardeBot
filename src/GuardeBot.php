@@ -148,11 +148,21 @@ class GuardeBot
     }
 
     /**
-     * Log to file and telegram test group
+     * @deprecated
+     * Log (debug) to file and telegram test group
      */
     public function log($element, $title = null)
     {
         App::getInstance()->getLogger()->debug($title, [$element]);
+    }
+
+     /**
+     * @deprecated
+     * Log (info) to file and telegram test group
+     */
+    private function logInfo($element, $title = null)
+    {
+        App::getInstance()->getLogger()->info($title, [$element]);
     }
 
     public function say($chatId, $message)
@@ -205,13 +215,28 @@ class GuardeBot
         } else if ($this->isCommand($message, $commandText)) {
             $this->log('Processing command ...');
             $this->processCommand($commandText, $update);
+        } else if ($this->isChatJoinRequest($update, $newMember)){
+            $this->logInfo("Chat join request for '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' [".implode(',', [$newMember->userId, $newMember->userName, $newMember->firstName, $newMember->lastName])."] ...");
+            if(MastersManager::getInstance()->has($newMember->userId)){
+                $messageChatId = null;
+                if (TelegramHelper::tryGetMessageChatId($update, $messageChatId)) {
+                    $this->logInfo("Approving chat join request for member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' because of masterlist...");
+                    TelegramHelper::approveChatJoinRequest($this->telegram, $messageChatId, $newMember);
+                }
+            } else if (SpammersManager::getInstance()->has($newMember->userId)) {
+                $messageChatId = null;
+                if (TelegramHelper::tryGetMessageChatId($update, $messageChatId)) {
+                    $this->logInfo("Declining chat join request for member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' because of blacklist...");
+                    TelegramHelper::declineChatJoinRequest($this->telegram, $messageChatId, $newMember);
+                }
+            }
         } else if ($this->isNewMemberIncoming($update, $newMember)) {
-            $this->log("Incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "'...");
+            $this->logInfo("Incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' [".implode(',', [$newMember->userId, $newMember->userName, $newMember->firstName, $newMember->lastName])."] ...");
             //check if incoming user is marked as banned
             if (SpammersManager::getInstance()->has($newMember->userId) && !MastersManager::getInstance()->has($newMember->userId)) {
                 $messageChatId = null;
                 if (TelegramHelper::tryGetMessageChatId($update, $messageChatId)) {
-                    $this->log("Banning incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' because of blacklist...");
+                    $this->logInfo("Banning incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' because of blacklist...");
                     TelegramHelper::banChatMember($this->telegram, $messageChatId, $newMember);
                 }
             }
@@ -233,6 +258,18 @@ class GuardeBot
             && isset($update->message->new_chat_member->id)
         ) {
             return TelegramHelper::tryGetMemberInfoFromStructure($update->message->new_chat_member, $newMember);
+        }
+        return false;
+    }
+
+    private function isChatJoinRequest($update, &$newMember) : bool
+    {
+        if (
+            isset($update->chat_join_request)
+            && isset($update->chat_join_request->from)
+            && isset($update->chat_join_request->from->id)
+        ) {
+            return TelegramHelper::tryGetMemberInfoFromStructure($update->chat_join_request->from, $newMember);
         }
         return false;
     }

@@ -51,6 +51,11 @@ class TelegramApi
         return TelegramApi::getResultOrThrow($this->api->answerCallbackQuery($content));
     }
 
+    public function approveChatJoinRequest(array $content)
+    {
+        return TelegramApi::getResultOrThrow($this->api->approveChatJoinRequest($content));
+    }
+
     public function banChatMember(array $content)
     {
         return TelegramApi::getResultOrThrow($this->api->banChatMember($content));
@@ -59,6 +64,11 @@ class TelegramApi
     public function deleteMessage(array $content, bool $throw = true)
     {
         return TelegramApi::getResultOrThrow($this->api->deleteMessage($content), $throw);
+    }
+
+    public function declineChatJoinRequest(array $content)
+    {
+        return TelegramApi::getResultOrThrow($this->api->declineChatJoinRequest($content));
     }
 
     public function deleteWebhook($dropPendingUpdates = false)

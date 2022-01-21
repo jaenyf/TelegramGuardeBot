@@ -153,6 +153,22 @@ class TelegramHelper
         return $displayName;
     }
 
+    public static function approveChatJoinRequest($telegram, $chatId, $memberInfo)
+    {
+        if ($telegram->approveChatJoinRequest(['chat_id' => $chatId, 'user_id' => $memberInfo->userId])) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function declineChatJoinRequest($telegram, $chatId, $memberInfo)
+    {
+        if ($telegram->declineChatJoinRequest(['chat_id' => $chatId, 'user_id' => $memberInfo->userId])) {
+            return true;
+        }
+        return false;
+    }
+
     public static function banChatMember($telegram, $chatId, $memberInfo)
     {
         if ($telegram->banChatMember(['chat_id' => $chatId, 'user_id' => $memberInfo->userId, 'until_date' => 0, 'revoke_messages' => true])) {
