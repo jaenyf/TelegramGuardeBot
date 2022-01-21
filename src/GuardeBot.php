@@ -7,6 +7,7 @@ use TelegramGuardeBot\TelegramApi;
 use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
 use TelegramGuardeBot\Validators\MlSpamTextValidator;
 use TelegramGuardeBot\Learners\MlSpamTextLearner;
+use TelegramGuardeBot\Learners\MlHamTextLearner;
 use TelegramGuardeBot\Managers\Masters\MastersManager;
 use TelegramGuardeBot\Managers\Spams\SpammersManager;
 use TelegramGuardeBot\Helpers\ArrayHelper;
@@ -324,6 +325,30 @@ class GuardeBot
         $loweredCommandText = strtolower($commandText);
         switch ($loweredCommandText)
         {
+            case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::CMD_MARK_AS_HAM):
+            case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::FCMD_MARK_AS_HAM):
+                //the behavior here is to considere this command is in a reply of the message to mark as spam
+                $commandAuthor = null;
+                if (TelegramHelper::tryGetMemberInfoFromStructure($update->message->from, $commandAuthor))
+                {
+                    //Only Masters can execute this command
+                    if (MastersManager::getInstance()->has($commandAuthor->userId))
+                    {
+                        $replyToMessageText = '';
+                        if (TelegramHelper::tryGetReplyToMessageText($update, $replyToMessageText))
+                        {
+                            $learner = new MlHamTextLearner();
+                            $learner->learn($replyToMessageText, false);
+
+                            //delete command update message
+                            $this->telegram->deleteMessage(["message_id" => $update->message->message_id, "chat_id" => $update->message->chat->id], false);
+
+                            $this->log($replyToMessageText, 'marked as ham !');
+                        }
+                    }
+                }
+                break;
+
             case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::CMD_MARK_AS_SPAM):
             case GuardeBotMessagesBase::getLowered(GuardeBotMessagesBase::FCMD_MARK_AS_SPAM):
                 //the behavior here is to considere this command is in a reply of the message to mark as spam

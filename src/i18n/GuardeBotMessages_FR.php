@@ -15,6 +15,8 @@ class GuardeBotMessages extends GuardeBotMessagesBase
             self::SAY_WEBHOOK_SET_UP => 'Web hook en place !',
             self::CMD_HEADER => '/',
             self::FCMD_HEADER => 'Garde',
+            self::CMD_MARK_AS_HAM => 'ham',
+            self::FCMD_MARK_AS_HAM => 'Ceci n\'est pas un spam',
             self::CMD_MARK_AS_SPAM => 'spam',
             self::FCMD_MARK_AS_SPAM => 'Ceci est un spam',
             self::CMD_BAN_MESSAGE_AUTHOR => 'ban',

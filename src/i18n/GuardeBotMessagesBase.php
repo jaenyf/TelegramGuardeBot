@@ -78,6 +78,16 @@ class GuardeBotMessagesBase
     public const FCMD_HEADER = 'FCMD_HEADER';
 
     /**
+     * The command to mark a message as ham
+     */
+    public const CMD_MARK_AS_HAM = 'CMD_MARK_AS_HAM';
+
+    /**
+     * The friendly command to mark a message as ham
+     */
+    public const FCMD_MARK_AS_HAM = 'FCMD_MARK_AS_NO_SPAM';
+
+    /**
      * The command to mark a message as spam
      */
     public const CMD_MARK_AS_SPAM = 'CMD_MARK_AS_SPAM';

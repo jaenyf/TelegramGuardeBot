@@ -6,7 +6,7 @@ namespace TelegramGuardeBot\Learners;
 
 use TelegramGuardeBot\Learners\TextValidationLearner;
 
-class MlSpamTextLearner implements TextValidationLearner
+class MlHamTextLearner implements TextValidationLearner
 {
     /**
      * Validate a given text
@@ -17,7 +17,7 @@ class MlSpamTextLearner implements TextValidationLearner
 
         if(!$isValid)
         {
-            file_put_contents("spams.learning.lst", json_encode($text).PHP_EOL, FILE_APPEND | LOCK_EX);
+            file_put_contents("hams.learning.lst", json_encode($text).PHP_EOL, FILE_APPEND | LOCK_EX);
         }
     }
 }
