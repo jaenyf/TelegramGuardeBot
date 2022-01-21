@@ -206,10 +206,12 @@ class GuardeBot
             $this->log('Processing command ...');
             $this->processCommand($commandText, $update);
         } else if ($this->isNewMemberIncoming($update, $newMember)) {
+            $this->log("Incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "'...");
             //check if incoming user is marked as banned
             if (SpammersManager::getInstance()->has($newMember->userId) && !MastersManager::getInstance()->has($newMember->userId)) {
                 $messageChatId = null;
                 if (TelegramHelper::tryGetMessageChatId($update, $messageChatId)) {
+                    $this->log("Banning incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' because of blacklist...");
                     TelegramHelper::banChatMember($this->telegram, $messageChatId, $newMember);
                 }
             }

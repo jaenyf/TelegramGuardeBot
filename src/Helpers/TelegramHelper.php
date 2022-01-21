@@ -118,7 +118,7 @@ class TelegramHelper
     }
 
 
-    public static function getBestMessageAuthorDisplayName($messageAuthorInfo)
+    public static function getBestMessageAuthorDisplayName($messageAuthorInfo, bool $showUserId = false) : string
     {
         $displayName = '';
 
@@ -138,6 +138,16 @@ class TelegramHelper
                 $displayName .= ' ';
             }
             $displayName .= ('(@' . $messageAuthorInfo->userName . ')');
+        }
+
+        if($showUserId)
+        {
+            if (!empty($messageAuthorInfo->userId)) {
+                if (!empty($displayName)) {
+                    $displayName .= ' ';
+                }
+                $displayName .= ('(' . $messageAuthorInfo->userId . ')');
+            }
         }
 
         return $displayName;
