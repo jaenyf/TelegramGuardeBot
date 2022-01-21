@@ -29,9 +29,12 @@ class NewMemberUpdateHandler extends UpdateHandler
     {
         $messageChatId = $update->chat_member->chat->id;
 
+        App::getInstance()->getLogger()->info("Incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo, true) . "'...");
+
         //check if incoming user is marked as banned
         if (SpammersManager::getInstance()->has($newMemberInfo->userId) && !MastersManager::getInstance()->has($newMemberInfo->userId))
         {
+            App::getInstance()->getLogger()->info("Banning incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo, true) . "' because of blacklist...");
             TelegramHelper::banChatMember($this->telegram, $messageChatId, $newMemberInfo);
         }
         else
