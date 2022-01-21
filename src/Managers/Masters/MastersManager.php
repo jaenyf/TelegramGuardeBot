@@ -11,9 +11,14 @@ class MastersManager extends CsvMembersManager
     public const GlobalListFileName = 'Masters.lst';
     public const GlobalListLockFileName = 'Masters.lst.lock';
 
-    protected static function createInstance(): CsvMembersManager
+    private static MastersManager $instance;
+
+    public static function getInstance()
     {
-        return new MastersManager();
+        if (!isset(self::$instance)) {
+            self::$instance = new MastersManager();
+        }
+        return self::$instance;
     }
 
     protected function getFilename(): string

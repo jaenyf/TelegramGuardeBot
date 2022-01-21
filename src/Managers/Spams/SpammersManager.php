@@ -11,9 +11,14 @@ class SpammersManager extends CsvMembersManager
     public const GlobalListFileName = 'Spammers.lst';
     public const GlobalListLockFileName = 'Spammers.lst.lock';
 
-    protected static function createInstance(): CsvMembersManager
+    private static SpammersManager $instance;
+
+    public static function getInstance()
     {
-        return new SpammersManager();
+        if (!isset(self::$instance)) {
+            self::$instance = new SpammersManager();
+        }
+        return self::$instance;
     }
 
     protected function getFilename(): string

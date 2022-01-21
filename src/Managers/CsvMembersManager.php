@@ -11,22 +11,11 @@ use TelegramGuardeBot\Managers\CsvManager;
  */
 abstract class CsvMembersManager extends CsvManager
 {
-    private static CsvMembersManager $instance;
     private const Headers = ['ID', 'USERNAME', 'FIRST_NAME', 'LAST_NAME'];
 
     protected function __construct()
     {
         parent::__construct(CsvMembersManager::Headers);
-    }
-
-    protected static abstract function createInstance(): CsvMembersManager;
-
-    public static function getInstance()
-    {
-        if (!isset(self::$instance)) {
-            self::$instance = static::createInstance();
-        }
-        return self::$instance;
     }
 
     protected function useLocking(): bool

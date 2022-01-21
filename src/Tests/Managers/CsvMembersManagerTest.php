@@ -6,6 +6,8 @@ namespace TelegramGuardeBot\Tests\Managers;
 
 use TelegramGuardeBot\Tests\GuardeBotTestCase;
 use TelegramGuardeBot\Managers\CsvMembersManager;
+use TelegramGuardeBot\Managers\Spams\SpammersManager;
+use TelegramGuardeBot\Managers\Masters\MastersManager;
 
 abstract class CsvMembersManagerTest extends GuardeBotTestCase
 {
@@ -73,6 +75,16 @@ abstract class CsvMembersManagerTest extends GuardeBotTestCase
 
         //Assert
         $this->assertThat($tested, $this->equalTo(true));
+    }
+
+    public function testCsvMembersManagerGetInstanceDontMixesOverTypes()
+    {
+        //Arrange / Act
+        $spammerManager = SpammersManager::getInstance();
+        $masterManager = MastersManager::getInstance();
+
+        //Assert
+        $this->assertThat($spammerManager, $this->logicalNot($this->equalTo($masterManager)));
     }
 
 }
