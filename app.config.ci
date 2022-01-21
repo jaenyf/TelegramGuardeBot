@@ -6,6 +6,7 @@
     "logChatId": -123456789,
     "locale": "EN",
     "enableApiLogging": true,
+    "enableNewMemberValidation" : true,
     "newMemberValidationTimeout": 30,
     "messagesActions" : [
         {

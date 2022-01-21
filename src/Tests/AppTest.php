@@ -106,6 +106,18 @@ final class AppTest extends GuardeBotTestCase
     /**
      * @group noSetUp
      */
+    public function testEnableNewMemberValidationIsParsed(): void
+    {
+        //Act
+        $sut = static::initializeAndGetTestInstance();
+
+        //Assert
+        $this->assertThat($sut->enableNewMemberValidation, $this->equalTo(true));
+    }
+
+    /**
+     * @group noSetUp
+     */
     public function testLocaleIsParsed(): void
     {
         //Act

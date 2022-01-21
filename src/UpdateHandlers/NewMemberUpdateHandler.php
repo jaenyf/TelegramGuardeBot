@@ -37,7 +37,7 @@ class NewMemberUpdateHandler extends UpdateHandler
             App::getInstance()->getLogger()->info("Banning incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo, true) . "' because of blacklist...");
             TelegramHelper::banChatMember($this->telegram, $messageChatId, $newMemberInfo);
         }
-        else
+        else if(App::getInstance()->enableNewMemberValidation)
         {
             if ($update->chat_member->new_chat_member->status != 'creator')
             {

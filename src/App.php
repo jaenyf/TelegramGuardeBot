@@ -22,6 +22,7 @@ class App
     public string $locale;
     public bool $enableApiLogging;
     public array $messagesActions;
+    public bool $enableNewMemberValidation;
     public int $newMemberValidationTimeout;
     private GuardeBot $bot;
     private $diContainer;
@@ -41,6 +42,7 @@ class App
         $this->locale = strtoupper($config->locale);
         $this->enableApiLogging = $config->enableApiLogging;
         $this->messagesActions = $config->messagesActions;
+        $this->enableNewMemberValidation = $config->enableNewMemberValidation ?? false;
         $this->newMemberValidationTimeout = $config->newMemberValidationTimeout;
 
 
