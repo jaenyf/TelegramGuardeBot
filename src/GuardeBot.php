@@ -14,6 +14,7 @@ use TelegramGuardeBot\Helpers\TelegramHelper;
 use TelegramGuardeBot\Actions\MessageActionProcessor;
 use TelegramGuardeBot\UpdateHandlers\CallbackQueryUpdateHandler;
 use TelegramGuardeBot\UpdateHandlers\NewMemberUpdateHandler;
+use TelegramGuardeBot\UpdateHandlers\ChatJoinRequestUpdateHandler;
 use TelegramGuardeBot\Workers\Scheduler;
 
 
@@ -273,24 +274,13 @@ class GuardeBot
             $this->processCommand($commandText, $update);
         } else if (TelegramHelper::isNewMemberIncoming($update, $newMember)) {
             (new NewMemberUpdateHandler($this->telegram))->handle($update, $newMember);
+        } else if (TelegramHelper::isChatJoinRequest($update, $newMember)) {
+            (new ChatJoinRequestUpdateHandler($this->telegram))->handle($update, $newMember);
         } else if (TelegramHelper::isCallbackQuery($update, $callbackQuery)) {
             (new CallbackQueryUpdateHandler($this->telegram))->handle($update, $callbackQuery);
         } else {
             $this->log($update, 'Unkown process update type !');
         }
-    }
-
-
-    private function isChatJoinRequest($update, &$newMember) : bool
-    {
-        if (
-            isset($update->chat_join_request)
-            && isset($update->chat_join_request->from)
-            && isset($update->chat_join_request->from->id)
-        ) {
-            return TelegramHelper::tryGetMemberInfoFromStructure($update->chat_join_request->from, $newMember);
-        }
-        return false;
     }
 
     /**
