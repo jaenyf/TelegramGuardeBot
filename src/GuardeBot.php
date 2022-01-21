@@ -12,6 +12,10 @@ use TelegramGuardeBot\Managers\Spams\SpammersManager;
 use TelegramGuardeBot\Helpers\ArrayHelper;
 use TelegramGuardeBot\Helpers\TelegramHelper;
 use TelegramGuardeBot\Actions\MessageActionProcessor;
+use TelegramGuardeBot\UpdateHandlers\CallbackQueryUpdateHandler;
+use TelegramGuardeBot\UpdateHandlers\NewMemberUpdateHandler;
+use TelegramGuardeBot\UpdateHandlers\ChatJoinRequestUpdateHandler;
+use TelegramGuardeBot\Workers\Scheduler;
 
 
 /**
@@ -82,6 +86,54 @@ class GuardeBot
         fclose($file);
     }
 
+    public function approveMember(int $chatId, int $userId)
+    {
+        $chatMember = $this->telegram->getChatMember([
+            'chat_id' => $chatId,
+            'user_id' => $userId
+        ]);
+
+        if ($chatMember->status == 'creator' || $chatMember->status == 'administrator') {
+            $this->log($chatMember, 'Ignoring member approval for administrators...');
+            return;
+        }
+
+        $this->telegram->restrictChatMember([
+            'chat_id' => $chatId,
+            'user_id' => $userId,
+            'permissions' => [
+                'can_send_messages' => true,
+                'can_send_media_messages' => true,
+                'can_send_polls' => true,
+                'can_send_other_messages' => true,
+                'can_add_web_page_previews' => true,
+                'can_change_info' => true,
+                'can_invite_users' => true,
+                'can_pin_messages' => true
+            ]
+        ]);
+    }
+
+    public function ejectMember(int $chatId, int $userId)
+    {
+        $chatMember = $this->telegram->getChatMember([
+            'chat_id' => $chatId,
+            'user_id' => $userId
+        ]);
+
+        if ($chatMember->status == 'creator') {
+            $this->log($chatMember, 'Ignoring member ejection for creators...');
+            return;
+        }
+
+        $this->telegram->banChatMember(['chat_id' => $chatId, 'user_id' => $userId, 'until_date' => time() + 30, 'revoke_messages' => false]);
+    }
+
+    public function deleteMessage(int $chatId, int $messageId)
+    {
+        $this->telegram->deleteMessage(['chat_id' => $chatId, 'message_id' => $messageId]);
+    }
+
     public function isHooked()
     {
         $hookInfo = ArrayHelper::toObject($this->telegram->getWebhookInfo());
@@ -122,6 +174,7 @@ class GuardeBot
                 throw new \Exception('Failed to set web hook');
             }
 
+            Scheduler::getInstance()->start();
 
             //create the hook lock file as all went well:
             $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
@@ -138,6 +191,9 @@ class GuardeBot
         if ($this->isHooked()) {
             $this->telegram->deleteWebhook($dropPendingUpdates);
         }
+
+        Scheduler::getInstance()->stop();
+
         $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
         if (file_exists($hookFileName)) {
             $hookFilePointer = fopen($hookFileName, 'w+');
@@ -208,6 +264,7 @@ class GuardeBot
         $isValid = $spamValidator->validate($message);
         $commandText = '';
         $newMember = null;
+        $callbackQuery = null;
         if (!$isValid) {
             //this is a spam
             //TODO: handle spam
@@ -215,63 +272,15 @@ class GuardeBot
         } else if ($this->isCommand($message, $commandText)) {
             $this->log('Processing command ...');
             $this->processCommand($commandText, $update);
-        } else if ($this->isChatJoinRequest($update, $newMember)){
-            $this->logInfo("Chat join request for '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' [".implode(',', [$newMember->userId, $newMember->userName, $newMember->firstName, $newMember->lastName])."] ...");
-            if(MastersManager::getInstance()->has($newMember->userId)){
-                $messageChatId = null;
-                if (TelegramHelper::tryGetMessageChatId($update, $messageChatId)) {
-                    $this->logInfo("Approving chat join request for member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' because of masterlist...");
-                    TelegramHelper::approveChatJoinRequest($this->telegram, $messageChatId, $newMember);
-                }
-            } else if (SpammersManager::getInstance()->has($newMember->userId)) {
-                $messageChatId = null;
-                if (TelegramHelper::tryGetMessageChatId($update, $messageChatId)) {
-                    $this->logInfo("Declining chat join request for member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' because of blacklist...");
-                    TelegramHelper::declineChatJoinRequest($this->telegram, $messageChatId, $newMember);
-                }
-            }
-        } else if ($this->isNewMemberIncoming($update, $newMember)) {
-            $this->logInfo("Incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' [".implode(',', [$newMember->userId, $newMember->userName, $newMember->firstName, $newMember->lastName])."] ...");
-            //check if incoming user is marked as banned
-            if (SpammersManager::getInstance()->has($newMember->userId) && !MastersManager::getInstance()->has($newMember->userId)) {
-                $messageChatId = null;
-                if (TelegramHelper::tryGetMessageChatId($update, $messageChatId)) {
-                    $this->logInfo("Banning incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMember, true) . "' because of blacklist...");
-                    TelegramHelper::banChatMember($this->telegram, $messageChatId, $newMember);
-                }
-            }
+        } else if (TelegramHelper::isNewMemberIncoming($update, $newMember)) {
+            (new NewMemberUpdateHandler($this->telegram))->handle($update, $newMember);
+        } else if (TelegramHelper::isChatJoinRequest($update, $newMember)) {
+            (new ChatJoinRequestUpdateHandler($this->telegram))->handle($update, $newMember);
+        } else if (TelegramHelper::isCallbackQuery($update, $callbackQuery)) {
+            (new CallbackQueryUpdateHandler($this->telegram))->handle($update, $callbackQuery);
         } else {
             $this->log($update, 'Unkown process update type !');
         }
-    }
-
-    /**
-     * Whether or not the update concerns a new user incoming
-     * \param $update The update to verify
-     * \param $newMember The member info that will be populated if this is a new member incoming
-     */
-    private function isNewMemberIncoming($update, &$newMember): bool
-    {
-        if (
-            isset($update->message)
-            && isset($update->message->new_chat_member)
-            && isset($update->message->new_chat_member->id)
-        ) {
-            return TelegramHelper::tryGetMemberInfoFromStructure($update->message->new_chat_member, $newMember);
-        }
-        return false;
-    }
-
-    private function isChatJoinRequest($update, &$newMember) : bool
-    {
-        if (
-            isset($update->chat_join_request)
-            && isset($update->chat_join_request->from)
-            && isset($update->chat_join_request->from->id)
-        ) {
-            return TelegramHelper::tryGetMemberInfoFromStructure($update->chat_join_request->from, $newMember);
-        }
-        return false;
     }
 
     /**

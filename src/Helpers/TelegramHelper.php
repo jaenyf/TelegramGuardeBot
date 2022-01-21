@@ -117,6 +117,23 @@ class TelegramHelper
         return false;
     }
 
+    /**
+     * Whether or not the update concerns a new chat joind request
+     * \param $update The update to verify
+     * \param $newMember The member info that will be populated if this is a new chat join request
+     */
+    public static function isChatJoinRequest($update, &$newMember) : bool
+    {
+        if (
+            isset($update->chat_join_request)
+            && isset($update->chat_join_request->from)
+            && isset($update->chat_join_request->from->id)
+        ) {
+            return TelegramHelper::tryGetMemberInfoFromStructure($update->chat_join_request->from, $newMember);
+        }
+        return false;
+    }
+
 
     public static function getBestMessageAuthorDisplayName($messageAuthorInfo, bool $showUserId = false) : string
     {
