@@ -293,7 +293,7 @@ class GuardeBot
                 //this is probably a spam
                 //TODO: handle spam
                 $this->log($message, 'Looks like spam ...');
-                $this->replyTo($update->message->chat->id, $update->message->message_id, GuardeBotMessagesBase::getInstance()->get(GuardeBotMessagesBase::MESSAGE_LOOKS_LIKE_SPAM));
+                $this->replyTo($update->message->chat->id, $update->message->message_id, '@admin ('. GuardeBotMessagesBase::getInstance()->get(GuardeBotMessagesBase::MESSAGE_LOOKS_LIKE_SPAM) .')');
             }
         }
     }
