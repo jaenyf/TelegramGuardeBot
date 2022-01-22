@@ -232,6 +232,17 @@ class GuardeBot
         );
     }
 
+    public function replyTo($chatId, $messageId, $message)
+    {
+        $this->telegram->sendMessage(
+            array(
+                'chat_id' => $chatId,
+                'reply_to_message_id' => $messageId,
+                'text' => $message
+            )
+        );
+    }
+
 
     /**
      * Handle the updates received by the web hook
@@ -261,17 +272,12 @@ class GuardeBot
     private function processUpdate($update)
     {
         $message = (isset($update->message) && isset($update->message->text)) ? $update->message->text : '';
-        $spamValidator = new MlSpamTextValidator();
-        $isValid = $spamValidator->validate($message);
+
         $commandText = '';
         $newMember = null;
         $callbackQuery = null;
-        if (!$isValid) {
-            //this is a spam
-            //TODO: handle spam
-            $this->log($update, 'Processing spam treatment ...');
-        } else if ($this->isCommand($message, $commandText)) {
-            $this->log('Processing command ...');
+        if ($this->isCommand($message, $commandText)) {
+            $this->log($commandText, 'Processing command ...');
             $this->processCommand($commandText, $update);
         } else if (TelegramHelper::isNewMemberIncoming($update, $newMember)) {
             (new NewMemberUpdateHandler($this->telegram))->handle($update, $newMember);
@@ -281,6 +287,14 @@ class GuardeBot
             (new CallbackQueryUpdateHandler($this->telegram))->handle($update, $callbackQuery);
         } else {
             $this->log($update, 'Unkown process update type !');
+            $spamValidator = new MlSpamTextValidator();
+            $isValid = $spamValidator->validate($message);
+            if (!$isValid) {
+                //this is probably a spam
+                //TODO: handle spam
+                $this->log($message, 'Looks like spam ...');
+                $this->replyTo($update->message->chat->id, $update->message->message_id, GuardeBotMessagesBase::getInstance()->get(GuardeBotMessagesBase::MESSAGE_LOOKS_LIKE_SPAM));
+            }
         }
     }
 

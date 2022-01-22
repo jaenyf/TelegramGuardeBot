@@ -24,7 +24,8 @@ class GuardeBotMessages extends GuardeBotMessagesBase
             self::ACK_BAN_MESSAGE_AUTHOR => 'User "%1" has been banned !',
             self::NEW_MEMBER_VALIDATION_MARKDOWN_GREETINGS => '_[@%1](tg://user?id=%2)_, welcome\\! Click the button bellow under the specified amount of time to join this place\\! Thank you in advance\\! \\(%3 seconds\\)',
             self::NEW_MEMBER_VALIDATION_OTHER_MEMBER_CLICK_ERROR_MESSAGE => 'Only user %1 could reply to this message',
-            self::NEW_MEMBER_VALIDATION_BUTTON_TEXT => 'I join this place!'
+            self::NEW_MEMBER_VALIDATION_BUTTON_TEXT => 'I join this place!',
+            self::MESSAGE_LOOKS_LIKE_SPAM => 'This message looks like spam'
         );
     }
 }

@@ -130,4 +130,9 @@ class GuardeBotMessagesBase
      * The text displayed on the button a new member has to click to join
      */
     public const NEW_MEMBER_VALIDATION_BUTTON_TEXT = 'NEW_MEMBER_VALIDATION_BUTTON_TEXT';
+
+    /**
+     * The text displayed on the button a new member has to click to join
+     */
+    public const MESSAGE_LOOKS_LIKE_SPAM = 'MESSAGE_LOOKS_LIKE_SPAM';
 }

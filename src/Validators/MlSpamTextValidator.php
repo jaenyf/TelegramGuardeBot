@@ -6,7 +6,11 @@ namespace TelegramGuardeBot\Validators;
 
 use TelegramGuardeBot\Validators\TextValidator;
 
-use Phpml\ModelManager;
+use TelegramGuardeBot\Helpers\TextHelper;
+
+use Rubix\ML\Datasets\Unlabeled;
+use Rubix\ML\PersistentModel;
+use Rubix\ML\Persisters\Filesystem;
 
 class MlSpamTextValidator implements TextValidator
 {
@@ -16,9 +20,13 @@ class MlSpamTextValidator implements TextValidator
      */
     public function validate(string $text): bool
     {
-        $modelManager = new ModelManager();
-        $model = $modelManager->restoreFromFile('passes-ml-model.dat');
-        $prediction = $model->predict([$text]);
-        return $prediction[0] === "negatifs";
+        $text = TextHelper::normalize($text);
+
+        $estimator = PersistentModel::load(new Filesystem('spamestimator.rbx'));
+
+        $dataset = new Unlabeled([$text]);
+        $prediction = $estimator->predict($dataset);
+
+        return $prediction[0] == "ham";
     }
 }
