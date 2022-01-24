@@ -352,7 +352,7 @@ class GuardeBot
                         if (TelegramHelper::tryGetReplyToMessageText($update, $replyToMessageText))
                         {
                             $learner = new MlHamTextLearner();
-                            $learner->learn($replyToMessageText, false);
+                            $learner->learn($replyToMessageText);
 
                             //delete command update message
                             $this->telegram->deleteMessage(["message_id" => $update->message->message_id, "chat_id" => $update->message->chat->id], false);
@@ -376,7 +376,7 @@ class GuardeBot
                         if (TelegramHelper::tryGetReplyToMessageText($update, $replyToMessageText))
                         {
                             $learner = new MlSpamTextLearner();
-                            $learner->learn($replyToMessageText, false);
+                            $learner->learn($replyToMessageText);
 
                             //delete command update message
                             $this->telegram->deleteMessage(["message_id" => $update->message->message_id, "chat_id" => $update->message->chat->id], false);

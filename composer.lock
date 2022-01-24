@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b1d190dc03ca9f02b551c2013cb2c9e0",
+    "content-hash": "2eee7a771114e32a667c29e7254e3df2",
     "packages": [
         {
             "name": "amphp/amp",
@@ -493,6 +493,147 @@
             "time": "2021-10-25T18:29:10+00:00"
         },
         {
+            "name": "league/flysystem",
+            "version": "2.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/flysystem.git",
+                "reference": "4a6f9f7d7b97c938f2fd25aeb9ff9a6a34c79f2f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/4a6f9f7d7b97c938f2fd25aeb9ff9a6a34c79f2f",
+                "reference": "4a6f9f7d7b97c938f2fd25aeb9ff9a6a34c79f2f",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "league/mime-type-detection": "^1.0.0",
+                "php": "^7.2 || ^8.0"
+            },
+            "conflict": {
+                "guzzlehttp/ringphp": "<1.1.1"
+            },
+            "require-dev": {
+                "async-aws/s3": "^1.5",
+                "async-aws/simple-s3": "^1.0",
+                "aws/aws-sdk-php": "^3.132.4",
+                "composer/semver": "^3.0",
+                "ext-fileinfo": "*",
+                "friendsofphp/php-cs-fixer": "^3.2",
+                "google/cloud-storage": "^1.23",
+                "phpseclib/phpseclib": "^2.0",
+                "phpstan/phpstan": "^0.12.26",
+                "phpunit/phpunit": "^8.5 || ^9.4",
+                "sabre/dav": "^4.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "League\\Flysystem\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Frank de Jonge",
+                    "email": "info@frankdejonge.nl"
+                }
+            ],
+            "description": "File storage abstraction for PHP",
+            "keywords": [
+                "WebDAV",
+                "aws",
+                "cloud",
+                "file",
+                "files",
+                "filesystem",
+                "filesystems",
+                "ftp",
+                "s3",
+                "sftp",
+                "storage"
+            ],
+            "support": {
+                "issues": "https://github.com/thephpleague/flysystem/issues",
+                "source": "https://github.com/thephpleague/flysystem/tree/2.4.0"
+            },
+            "funding": [
+                {
+                    "url": "https://offset.earth/frankdejonge",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/frankdejonge",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/league/flysystem",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-01-04T17:09:29+00:00"
+        },
+        {
+            "name": "league/mime-type-detection",
+            "version": "1.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/mime-type-detection.git",
+                "reference": "aa70e813a6ad3d1558fc927863d47309b4c23e69"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/mime-type-detection/zipball/aa70e813a6ad3d1558fc927863d47309b4c23e69",
+                "reference": "aa70e813a6ad3d1558fc927863d47309b4c23e69",
+                "shasum": ""
+            },
+            "require": {
+                "ext-fileinfo": "*",
+                "php": "^7.2 || ^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.2",
+                "phpstan/phpstan": "^0.12.68",
+                "phpunit/phpunit": "^8.5.8 || ^9.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "League\\MimeTypeDetection\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Frank de Jonge",
+                    "email": "info@frankdejonge.nl"
+                }
+            ],
+            "description": "Mime-type detection for Flysystem",
+            "support": {
+                "issues": "https://github.com/thephpleague/mime-type-detection/issues",
+                "source": "https://github.com/thephpleague/mime-type-detection/tree/1.9.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/frankdejonge",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/league/flysystem",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2021-11-21T11:48:40+00:00"
+        },
+        {
             "name": "monolog/monolog",
             "version": "2.3.5",
             "source": {
@@ -928,6 +1069,96 @@
             "time": "2021-05-03T11:20:27+00:00"
         },
         {
+            "name": "rubix/extras",
+            "version": "1.2.0-beta",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/RubixML/Extras.git",
+                "reference": "61b53eafb474308dd1eabae4c15d5afb2d844a1b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/RubixML/Extras/zipball/61b53eafb474308dd1eabae4c15d5afb2d844a1b",
+                "reference": "61b53eafb474308dd1eabae4c15d5afb2d844a1b",
+                "shasum": ""
+            },
+            "require": {
+                "league/flysystem": "1.x.x|2.x.x",
+                "php": ">=7.4",
+                "rubix/ml": "^1.0",
+                "scienide/okbloomer": "^1.0@beta",
+                "scienide/tensor": "^3.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "2.18.*",
+                "league/flysystem-memory": "1.x.x|2.x.x",
+                "phpbench/phpbench": "1.0.0-alpha8",
+                "phpstan/extension-installer": "^1.0",
+                "phpstan/phpstan": "0.12.*",
+                "phpstan/phpstan-phpunit": "0.12.*",
+                "phpunit/phpunit": "8.5.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Rubix\\ML\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Andrew DalPino",
+                    "email": "support@andrewdalpino.com",
+                    "homepage": "https://github.com/andrewdalpino",
+                    "role": "Project Lead"
+                },
+                {
+                    "name": "Contributors",
+                    "homepage": "https://github.com/RubixML/Extras/graphs/contributors"
+                }
+            ],
+            "description": "Experimental features for the Rubix ML library.",
+            "homepage": "https://rubixml.com",
+            "keywords": [
+                "Deep learning",
+                "Extras",
+                "Neural network",
+                "Rubix",
+                "ai",
+                "analytics",
+                "artificial intelligence",
+                "data mining",
+                "machine learning",
+                "ml",
+                "php",
+                "php ai",
+                "php ml",
+                "php-ml",
+                "rubix ml",
+                "rubixml"
+            ],
+            "support": {
+                "chat": "https://t.me/RubixML",
+                "email": "support@andrewdalpino.com",
+                "issues": "https://github.com/RubixML/Extras/issues",
+                "source": "https://github.com/RubixML/Extras"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/RubixML",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/andrewdalpino",
+                    "type": "github"
+                }
+            ],
+            "time": "2021-07-07T02:34:26+00:00"
+        },
+        {
             "name": "rubix/ml",
             "version": "1.3.1",
             "source": {
@@ -1259,6 +1490,113 @@
                 }
             ],
             "time": "2021-12-08T21:44:45+00:00"
+        },
+        {
+            "name": "scienide/tensor",
+            "version": "3.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Scien-ide/Tensor.git",
+                "reference": "581630d2f65f0f0b3d3ae51f401e26b8c56195b5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Scien-ide/Tensor/zipball/581630d2f65f0f0b3d3ae51f401e26b8c56195b5",
+                "reference": "581630d2f65f0f0b3d3ae51f401e26b8c56195b5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "2.18.*",
+                "phalcon/zephir": "^0.13.5",
+                "phpbench/phpbench": "^1.0",
+                "phpstan/extension-installer": "^1.0",
+                "phpstan/phpstan": "0.12.*",
+                "phpstan/phpstan-phpunit": "0.12.*",
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Tensor\\": "src/",
+                    "Zephir\\Optimizers\\FunctionCall\\": "optimizers/"
+                },
+                "files": [
+                    "src/constants.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Andrew DalPino",
+                    "email": "support@andrewdalpino.com",
+                    "homepage": "https://github.com/andrewdalpino",
+                    "role": "Project Lead"
+                },
+                {
+                    "name": "Contributors",
+                    "homepage": "https://github.com/RubixML/Tensor/graphs/contributors"
+                }
+            ],
+            "description": "A library and extension that provides objects for scientific computing in PHP.",
+            "homepage": "https://github.com/Scien-ide/Tensor",
+            "keywords": [
+                "1d convolution",
+                "2d convolution",
+                "arithmetic",
+                "blas",
+                "computation",
+                "computing",
+                "convolution",
+                "decomposition",
+                "dot product",
+                "eigendecomposition",
+                "eigenvalue",
+                "eigenvector",
+                "engineering",
+                "extension",
+                "lapack",
+                "linear algebra",
+                "math",
+                "matmul",
+                "matrix",
+                "matrix multiplication",
+                "multithreaded",
+                "php",
+                "php extension",
+                "pseudoinverse",
+                "scientific computing",
+                "signal processing",
+                "singular value decomposition",
+                "statistics",
+                "svd",
+                "tensor",
+                "trigonometry",
+                "vector",
+                "vector norm"
+            ],
+            "support": {
+                "email": "support@andrewdalpino.com",
+                "issues": "https://github.com/Scien-ide/Tensor/issues",
+                "source": "https://github.com/Scien-ide/Tensor"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/RubixML",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/andrewdalpino",
+                    "type": "github"
+                }
+            ],
+            "abandoned": "rubix/tensor",
+            "time": "2021-09-04T19:16:10+00:00"
         },
         {
             "name": "symfony/polyfill-iconv",
@@ -4172,7 +4510,8 @@
     "aliases": [],
     "minimum-stability": "alpha",
     "stability-flags": {
-        "php-di/php-di": 10
+        "php-di/php-di": 10,
+        "rubix/extras": 10
     },
     "prefer-stable": false,
     "prefer-lowest": false,

@@ -13,7 +13,7 @@
             "chatId" : -123456789,
             "chatFriendlyName" : "tests",
             "onType" : "message",
-            "action" : "logToFile",
+            "actions" : ["logToFile", "spam"],
             "fileName" : "tests.message.actions.lst"
         }
     ]

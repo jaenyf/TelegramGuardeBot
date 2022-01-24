@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot\Actions;
 
+/**
+ * A message action that log to a file
+ */
 class LogToFileMessageAction extends MessageAction
 {
 

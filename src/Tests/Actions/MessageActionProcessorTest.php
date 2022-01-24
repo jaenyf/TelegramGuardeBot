@@ -56,7 +56,7 @@ class MessageActionProcessorTest extends GuardeBotTestCase
         $messageAction = ArrayHelper::toObject([
             "chatId" => -1234567890123,
             "onType" => "message",
-            "action" => "logToFile",
+            "actions" => ["logToFile", "spam"],
             "fileName" => self::logFileTestName
         ]);
         $sut = new MessageActionProcessor();

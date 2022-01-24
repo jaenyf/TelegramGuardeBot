@@ -18,19 +18,16 @@ class MlHamTextLearner implements TextValidationLearner
      * Validate a given text
      * @return bool
      */
-    public function learn(string $text, bool $isValid)
+    public function learn(string $text)
     {
-        if($isValid)
-        {
-            $text = TextHelper::normalize($text);
+        $text = TextHelper::normalize($text);
 
-            file_put_contents("hams.learning.lst", json_encode($text).PHP_EOL, FILE_APPEND | LOCK_EX);
+        file_put_contents("hams.learning.lst", json_encode($text).PHP_EOL, FILE_APPEND | LOCK_EX);
 
-            $estimator = PersistentModel::load(new Filesystem('spamestimator.rbx'));
+        $estimator = PersistentModel::load(new Filesystem('spamestimator.rbx'));
 
-            $simpleDataset =  Labeled::build([$text], ["ham"]);
-            $estimator->partial($simpleDataset);
-            $estimator->save();
-        }
+        $simpleDataset =  Labeled::build([$text], ["ham"]);
+        $estimator->partial($simpleDataset);
+        $estimator->save();
     }
 }

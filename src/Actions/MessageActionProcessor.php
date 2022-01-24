@@ -13,20 +13,34 @@ class MessageActionProcessor
     {
         foreach($messagesActions as $messageAction)
         {
-            switch (strtolower($messageAction->action))
+            foreach($messageAction->actions as $action)
             {
-                case 'logtofile':
-                    if(!isset($messageAction->chatId) || (isset($update->message) && isset($update->message->chat) && isset($update->message->chat->id) && $update->message->chat->id == $messageAction->chatId))
-                    {
-                        switch(strtolower($messageAction->onType))
+                switch (strtolower($action))
+                {
+                    case 'logtofile':
+                        if(!isset($messageAction->chatId) || (isset($update->message) && isset($update->message->chat) && isset($update->message->chat->id) && $update->message->chat->id == $messageAction->chatId))
                         {
-                            case 'message':
-                                $messageAction = new LogToFileMessageAction($messageAction->fileName);
-                                $messageAction->act($update->message->text);
-                                break;
+                            switch(strtolower($messageAction->onType))
+                            {
+                                case 'message':
+                                    (new LogToFileMessageAction($messageAction->fileName))->act($update->message->text);
+                                    break;
+                            }
                         }
-                    }
-                    break;
+                        break;
+
+                    case 'spam':
+                        if(!isset($messageAction->chatId) || (isset($update->message) && isset($update->message->chat) && isset($update->message->chat->id) && $update->message->chat->id == $messageAction->chatId))
+                        {
+                            switch(strtolower($messageAction->onType))
+                            {
+                                case 'message':
+                                    (new SpamMessageAction())->act($update->message->text);
+                                    break;
+                            }
+                        }
+                        break;
+                }
             }
         }
     }
