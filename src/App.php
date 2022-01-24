@@ -9,6 +9,7 @@ use TelegramGuardeBot\TelegramApi;
 use TelegramGuardeBot\Log\GuardeBotLogger;
 use TelegramGuardeBot\DependenciesInitialization;
 use Psr\Log\LoggerInterface;
+use DI\Container;
 
 class App
 {
@@ -25,7 +26,7 @@ class App
     public bool $enableNewMemberValidation;
     public int $newMemberValidationTimeout;
     private GuardeBot $bot;
-    private $diContainer;
+    private Container $diContainer;
 
     private function __construct(string $configFileName)
     {
@@ -77,7 +78,7 @@ class App
         return preg_replace('![ \t]*//.*[ \t]*[\r\n]!', '', $text);
     }
 
-    public static function initialize($configFileName = null, $diContainer = null)
+    public static function initialize($configFileName = null, ?Container $diContainer = null)
     {
         if (isset(self::$instance))
         {
@@ -116,11 +117,22 @@ class App
     }
 
 
-    public function getLogger() : LoggerInterface
+    public function getDIContainer() : Container
     {
-        return $this->diContainer->get('logger');
+        return $this->diContainer;
     }
 
+    /**
+     * Shorthand for getDIContainer()->get('logger')
+     */
+    public function getLogger() : LoggerInterface
+    {
+        return $this->getDIContainer()->get('logger');
+    }
+
+    /**
+     * Shorthand for getDIContainer()->get('bot')
+     */
     public function getBot(): GuardeBot
     {
         return $this->bot;
