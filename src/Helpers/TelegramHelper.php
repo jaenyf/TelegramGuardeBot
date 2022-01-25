@@ -134,6 +134,24 @@ class TelegramHelper
         return false;
     }
 
+    /**
+     * Whether or not the update has a message text
+     * \param $update The update to verify
+     * \param $text The extracted message text
+     */
+    public static function hasMessageText($update, &$text): bool
+    {
+        if (
+            isset($update->message)
+            && isset($update->message->text)
+            && !empty($update->message->text)
+        ) {
+            $text = $update->message->text;
+            return true;
+        }
+        return false;
+    }
+
 
     public static function getBestMessageAuthorDisplayName($messageAuthorInfo, bool $showUserId = false) : string
     {

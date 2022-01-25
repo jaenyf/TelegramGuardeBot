@@ -18,6 +18,12 @@ class GuardeBotTestCase extends TestCase
     protected const appConfigFileName = "app.config.ci";
 
 
+    public static function setupBeforeClass() : void
+    {
+        //Required for loading rbx files
+        ini_set('memory_limit', '-1');
+    }
+
     protected function setUp() : void
     {
         if(in_array("noSetUp", $this->getGroups()))

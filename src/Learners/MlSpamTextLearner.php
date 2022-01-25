@@ -4,59 +4,48 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot\Learners;
 
+use TelegramGuardeBot\Estimators\MlSpamTextValidationEstimator;
 use TelegramGuardeBot\Learners\TextValidationLearner;
 use TelegramGuardeBot\Helpers\TextHelper;
+
+use TelegramGuardeBot\Estimators\MlLanguageTextEstimator;
 
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\PersistentModel;
 use Rubix\ML\Persisters\Filesystem;
-use Rubix\ML\Pipeline;
-use Rubix\ML\Transformers\TextNormalizer;
-use Rubix\ML\Transformers\WordCountVectorizer;
-use Rubix\ML\Tokenizers\NGram;
-use Rubix\ML\Transformers\ZScaleStandardizer;
-use Rubix\ML\Classifiers\GaussianNB;
-use Rubix\ML\Transformers\BM25Transformer;
+
+use Matriphe\ISO639\ISO639;
 
 class MlSpamTextLearner implements TextValidationLearner
 {
-
-    private const estimatorFileName = 'spamestimator.rbx';
-
     /**
      * Validate a given text
      */
     public function learn(string $text)
     {
-        $text = TextHelper::normalize($text);
 
-        file_put_contents("spams.learning.lst", json_encode($text).PHP_EOL, FILE_APPEND | LOCK_EX);
+        $languageEstimator = new MlLanguageTextEstimator();
+        $languageName = $languageEstimator->estimate($text);
+        $languageCode = (new ISO639())->code1ByLanguage($languageName);
 
-        if(!file_exists(self::estimatorFileName))
+        if($languageCode === '')
         {
-            self::createEstimatorFile();
+            throw new \ErrorException("Unsupported language iso code");
         }
 
-        $estimator = PersistentModel::load(new Filesystem(self::estimatorFileName));
+        $text = TextHelper::normalize($text);
+
+        file_put_contents("data/'.$languageCode.'.spams.learning.lst", json_encode($text).PHP_EOL, FILE_APPEND | LOCK_EX);
+
+        if(!file_exists(MlSpamTextValidationEstimator::getEstimatorFileName($languageCode)))
+        {
+            MlSpamTextValidationEstimator::createEstimatorFile($languageCode);
+        }
+
+        $estimator = PersistentModel::load(new Filesystem(MlSpamTextValidationEstimator::getEstimatorFileName($languageCode)));
 
         $simpleDataset =  Labeled::build([$text], ["spam"]);
         $estimator->partial($simpleDataset);
-        $estimator->save();
-    }
-
-    public static function createEstimatorFile() : void
-    {
-        $estimator = new PersistentModel(
-            new Pipeline([
-                new TextNormalizer(),
-                new WordCountVectorizer(1000000, 0.05, 0.95, new NGram(1, 2)),
-                new BM25Transformer(),
-                new ZScaleStandardizer()
-            ],
-            new GaussianNB()),
-            new Filesystem(self::estimatorFileName, false)
-        );
-
         $estimator->save();
     }
 }

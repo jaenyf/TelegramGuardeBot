@@ -104,4 +104,14 @@ class TextHelper
 
         return $text;
     }
+
+    /**
+     * Trim, set text to a single line and remove multiples contiguous whitespaces
+     */
+    public static function toSingleNormalizedLine($text)
+    {
+        $text = preg_replace('/\s\s+/', ' ', $text);
+        $text = trim($text);
+        return $text;
+    }
 }

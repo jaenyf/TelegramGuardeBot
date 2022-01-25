@@ -5,7 +5,8 @@ namespace TelegramGuardeBot;
 use ErrorException;
 use TelegramGuardeBot\TelegramApi;
 use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
-use TelegramGuardeBot\Validators\MlSpamTextValidator;
+use TelegramGuardeBot\Estimators\MlSpamTextValidationEstimator;
+use TelegramGuardeBot\Estimators\MlLanguageTextEstimator;
 use TelegramGuardeBot\Learners\MlSpamTextLearner;
 use TelegramGuardeBot\Learners\MlHamTextLearner;
 use TelegramGuardeBot\Managers\Masters\MastersManager;
@@ -268,7 +269,7 @@ class GuardeBot
     {
         $message = (isset($update->message) && isset($update->message->text)) ? $update->message->text : '';
 
-        $commandText = '';
+        $messageText = $commandText = '';
         $newMember = null;
         $callbackQuery = null;
         if ($this->isCommand($message, $commandText)) {
@@ -280,16 +281,21 @@ class GuardeBot
             (new ChatJoinRequestUpdateHandler($this->telegram))->handle($update, $newMember);
         } else if (TelegramHelper::isCallbackQuery($update, $callbackQuery)) {
             (new CallbackQueryUpdateHandler($this->telegram))->handle($update, $callbackQuery);
-        } else {
-            $this->log($update, 'Unkown process update type !');
-            $spamValidator = new MlSpamTextValidator();
-            $isValid = $spamValidator->validate($message);
+        } else if(TelegramHelper::hasMessageText($update, $messageText)){
+            $languageEstimator = new MlLanguageTextEstimator();
+            $language = $languageEstimator->estimate($messageText);
+            App::getInstance()->getLogger()->debug("Estimated lang. '".$language."' for message '".$messageText."'");
+
+            $spamValidator = new MlSpamTextValidationEstimator();
+            $isValid = $spamValidator->isValid($messageText);
             if (!$isValid) {
                 //this is probably a spam
                 //TODO: handle spam
-                $this->log($message, 'Looks like spam ...');
+                $this->log($messageText, 'Looks like spam ...');
                 $this->replyTo($update->message->chat->id, $update->message->message_id, '@admin ('. GuardeBotMessagesBase::getInstance()->get(GuardeBotMessagesBase::MESSAGE_LOOKS_LIKE_SPAM) .')');
             }
+        } else {
+            $this->log($update, 'Unkown process update type !');
         }
     }
 
