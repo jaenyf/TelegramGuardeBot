@@ -10,3 +10,5 @@ vendor/
 *.lst
 
 *.rbx
+
+data/
