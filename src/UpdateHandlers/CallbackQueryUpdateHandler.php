@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot\UpdateHandlers;
 
+use TelegramGuardeBot\App;
 use TelegramGuardeBot\TelegramApi;
 use TelegramGuardeBot\UpdateHandlers\UpdateHandler;
 use TelegramGuardeBot\Helpers\TelegramHelper;
@@ -30,7 +31,6 @@ class CallbackQueryUpdateHandler extends UpdateHandler
         if ($callbackQueryDataCount) {
             $callbackQueryId = $callbackQuery->id;
             switch ($callbackQueryData[0]) {
-
 
                 case 'MemberValidationClick':
 
@@ -78,15 +78,27 @@ class CallbackQueryUpdateHandler extends UpdateHandler
                                     /**
                                      * Authorized user clicked the button
                                      */
-                                    if(($arrivalTime + $graceTime) <= $currentTime)
+                                    if(($arrivalTime + $graceTime) > $currentTime)
                                     {
                                         $approvalTask = new MemberValidationApprovalTask($messageChatId, $memberId);
                                         Scheduler::getInstance()->addTask($approvalTask);
+                                    }
+                                    else
+                                    {
+                                        App::getInstance()->getLogger()->error('User clicked the button to late (message not yet disapeared ?) arrivalTime: "'.$arrivalTime.'", graceTime: "'.$graceTime.'", currentTime: "'.$currentTime.'"', [$callbackAuthorInfo]);
                                     }
 
                                     $this->telegram->deleteMessage(['chat_id' => $messageChatId, 'message_id' => $callbackQuery->message->message_id]);
                                 }
                             }
+                            else
+                            {
+                                App::getInstance()->getLogger()->error('Failed tryGetMessageChatId', [$callbackQuery]);
+                            }
+                        }
+                        else
+                        {
+                            App::getInstance()->getLogger()->error('Failed tryGetMemberInfoFromStructure', [$callbackQuery->from]);
                         }
                     }
                     else
