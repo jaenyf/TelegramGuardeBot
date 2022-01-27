@@ -33,7 +33,6 @@ class GuardeBot
 
     private TelegramApi $telegram;
     private $webHookUniqueName = null;
-    private int $logChatId;
 
     /**
      * Create a GuardeBot instance
@@ -44,15 +43,13 @@ class GuardeBot
      */
     public function __construct(
         TelegramApi $telegramApi,
-        string $webHookUniqueName,
-        int $logChatId
+        string $webHookUniqueName
     ) {
         $this->webHookUniqueName = trim(isset($webHookUniqueName) ? $webHookUniqueName : '');
         if ($this->webHookUniqueName === '') {
             throw new \Exception('WebHook unique name has to be defined');
         }
         $this->telegram = $telegramApi;
-        $this->logChatId = $logChatId;
     }
 
     private function deriveWebHookUniqueFilename($baseFilename)

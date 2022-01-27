@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot;
 
+use TelegramGuardeBot\AppConfig;
 use TelegramGuardeBot\GuardeBot;
-use TelegramGuardeBot\TelegramApi;
 use TelegramGuardeBot\Log\GuardeBotLogger;
 use TelegramGuardeBot\DependenciesInitialization;
 use Psr\Log\LoggerInterface;
@@ -13,70 +13,23 @@ use DI\Container;
 
 class App
 {
-    private const DefaultConfigFileName = 'app.config';
+
 
     private static $instance;
 
-    public string $envName;
-    public string $botToken;
-    public int $logChatId;
-    public string $locale;
-    public bool $enableApiLogging;
-    public array $messagesActions;
-    public bool $enableNewMemberValidation;
-    public int $newMemberValidationTimeout;
-    private GuardeBot $bot;
+    private AppConfig $appConfig;
     private Container $diContainer;
 
-    private function __construct(string $configFileName)
+    private function __construct(AppConfig $appConfig)
     {
-        if (!file_exists($configFileName))
+        if(!isset($appConfig))
         {
-            throw new \ErrorException('Configuration file not found');
+            throw new \InvalidArgumentException("appConfig is not set");
         }
 
-        $config = json_decode(self::stripComments(file_get_contents($configFileName)), false);
-
-        $this->envName = $config->envName;
-        $this->botToken = $config->botToken;
-        $this->logChatId = $config->logChatId;
-        $this->locale = strtoupper($config->locale);
-        $this->enableApiLogging = $config->enableApiLogging;
-        $this->messagesActions = $config->messagesActions;
-        $this->enableNewMemberValidation = $config->enableNewMemberValidation ?? false;
-        $this->newMemberValidationTimeout = $config->newMemberValidationTimeout;
-
-
-        if (empty($this->locale))
-        {
-            throw new \ErrorException('Missing locale');
-        }
-
-        switch ($this->locale)
-        {
-            case 'FR':
-            case 'EN':
-                break;
-            default:
-                throw new \ErrorException('Unsupported locale');
-        }
-        require_once fromAppSource('/i18n/GuardeBotMessages_' . $this->locale . '.php');
-
-        $this->bot = new GuardeBot(new TelegramApi($this->botToken, $this->enableApiLogging), $this->locale, $this->logChatId);
-
-        GuardeBotLogger::initialize($this->bot, $this->logChatId);
-        GuardeBotLogger::getInstance(); //register error handlers
+        $this->appConfig = $appConfig;
     }
 
-    /**
-     * From https://stackoverflow.com/a/10252511/319266
-     * @param string $str
-     * @return string
-     */
-    private static function stripComments($text)
-    {
-        return preg_replace('![ \t]*//.*[ \t]*[\r\n]!', '', $text);
-    }
 
     public static function initialize($configFileName = null, ?Container $diContainer = null)
     {
@@ -87,13 +40,16 @@ class App
 
         if (!isset($configFileName))
         {
-            $configFileName = App::DefaultConfigFileName;
+            $configFileName = AppConfig::defaultConfigFileName;
         }
 
-        self::$instance = new App($configFileName);
+        $diContainer = $diContainer ?? DependenciesInitialization::InitializeContainer($configFileName);
 
-        self::$instance->diContainer = $diContainer ?? DependenciesInitialization::InitializeContainer(self::$instance->envName);
+        self::$instance = new App($diContainer->get('appConfig'));
+        self::$instance->diContainer = $diContainer;
 
+        GuardeBotLogger::initialize(self::$instance->getDIContainer()->get('bot'), self::$instance->appConfig->logChatId);
+        GuardeBotLogger::getInstance(); //register error handlers
     }
 
     public static function isInitialized() : bool
@@ -135,6 +91,6 @@ class App
      */
     public function getBot(): GuardeBot
     {
-        return $this->bot;
+        return $this->getDIContainer()->get('bot');
     }
 }
