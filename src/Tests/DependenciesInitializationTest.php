@@ -10,7 +10,7 @@ final class DependenciesInitializationTest extends TestCase
     private $container;
     protected function setUp(): void
     {
-        $this->container = DependenciesInitialization::InitializeContainer();
+        $this->container = DependenciesInitialization::InitializeContainer('app.config.ci', 'dev');
     }
 
     public function testGetLoggerInstanceRetrieveMonologLogger(): void
