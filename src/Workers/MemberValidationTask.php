@@ -14,10 +14,16 @@ abstract class MemberValidationTask extends SchedulerTask
     protected int $chatId;
     protected int $userId;
 
-    public function __construct(BackgroundProcessInstanciator $instanciator, int $chatId, int $userId)
+    public function __construct(BackgroundProcessInstanciator $instanciator, NewMembersValidationManager $manager, int $chatId, int $userId)
     {
         parent::__construct($instanciator);
-        $this->manager = new NewMembersValidationManager();
+
+        if(!isset($manager))
+        {
+            throw new \InvalidArgumentException("manager is not set");
+        }
+
+        $this->manager = $manager;
         $this->chatId = $chatId;
         $this->userId = $userId;
     }

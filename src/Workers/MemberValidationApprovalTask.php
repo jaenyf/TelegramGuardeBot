@@ -11,12 +11,21 @@ class MemberValidationApprovalTask extends MemberValidationTask
 {
     public function __construct(int $chatId, int $userId)
     {
-        parent::__construct(App::getInstance()->getScheduler(), $chatId, $userId);
+        parent::__construct(
+            App::getInstance()->getScheduler(),
+            App::getInstance()->getDIContainer()->get('newMembersValidationManager'),
+            $chatId,
+            $userId
+        );
     }
 
     public function do()
     {
-        App::initialize();
+        if(!App::isInitialized())
+        {
+            App::initialize();
+        }
+
         $this->manager->remove($this->chatId, $this->userId);
         App::getInstance()->getBot()->approveMember($this->chatId, $this->userId);
     }

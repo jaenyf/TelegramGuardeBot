@@ -14,8 +14,6 @@ use DI\Container;
 
 class App
 {
-
-
     private static $instance;
 
     private AppConfig $appConfig;
@@ -31,10 +29,9 @@ class App
         $this->appConfig = $appConfig;
     }
 
-
     public static function initialize($configFileName = null, ?Container $diContainer = null)
     {
-        if (isset(self::$instance))
+        if (self::isInitialized())
         {
             throw new \ErrorException('Already initialized');
         }
@@ -63,7 +60,7 @@ class App
         self::$instance = null;
     }
 
-    public static function getInstance(): App
+    public static function getInstance() : App
     {
         if (!self::isInitialized())
         {
@@ -72,7 +69,6 @@ class App
 
         return self::$instance;
     }
-
 
     public function getDIContainer() : Container
     {

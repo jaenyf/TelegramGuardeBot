@@ -13,13 +13,22 @@ class MemberValidationEjectionTask extends MemberValidationTask
 
     public function __construct(int $chatId, int $userId, int $validationMessageId)
     {
-        parent::__construct(App::getInstance()->getScheduler(), $chatId, $userId);
+        parent::__construct(
+            App::getInstance()->getScheduler(),
+            App::getInstance()->getDIContainer()->get('newMembersValidationManager'),
+            $chatId,
+            $userId
+        );
         $this->validationMessageId = $validationMessageId;
     }
 
     public function do()
     {
-        App::initialize();
+        if(!App::isInitialized())
+        {
+            App::initialize();
+        }
+
         if ($this->manager->has($this->chatId, $this->userId)) {
             //Approval task has not removed pending user, it's time to eject it
             $this->manager->remove($this->chatId, $this->userId);
