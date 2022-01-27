@@ -8,6 +8,7 @@ use TelegramGuardeBot\AppConfig;
 use TelegramGuardeBot\GuardeBot;
 use TelegramGuardeBot\Log\GuardeBotLogger;
 use TelegramGuardeBot\DependenciesInitialization;
+use TelegramGuardeBot\Workers\Scheduler;
 use Psr\Log\LoggerInterface;
 use DI\Container;
 
@@ -92,5 +93,13 @@ class App
     public function getBot(): GuardeBot
     {
         return $this->getDIContainer()->get('bot');
+    }
+
+    /**
+     * Shorthand for getDIContainer()->get('scheduler')
+     */
+    public function getScheduler(): Scheduler
+    {
+        return $this->getDIContainer()->get('scheduler');
     }
 }

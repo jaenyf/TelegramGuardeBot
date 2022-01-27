@@ -8,7 +8,6 @@ use TelegramGuardeBot\App;
 use TelegramGuardeBot\TelegramApi;
 use TelegramGuardeBot\UpdateHandlers\UpdateHandler;
 use TelegramGuardeBot\Helpers\TelegramHelper;
-use TelegramGuardeBot\Workers\Scheduler;
 use TelegramGuardeBot\Workers\MemberValidationApprovalTask;
 use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
 
@@ -81,7 +80,7 @@ class CallbackQueryUpdateHandler extends UpdateHandler
                                     if(($arrivalTime + $graceTime) > $currentTime)
                                     {
                                         $approvalTask = new MemberValidationApprovalTask($messageChatId, $memberId);
-                                        Scheduler::getInstance()->addTask($approvalTask);
+                                        App::getInstance()->getScheduler()->addTask($approvalTask);
                                     }
                                     else
                                     {

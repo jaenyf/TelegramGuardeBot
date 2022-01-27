@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot\Workers;
 
+use TelegramGuardeBot\App;
 use TelegramGuardeBot\Workers\BackgroundProcessWorker;
 use TelegramGuardeBot\Workers\BackgroundProcessInstanciator;
 use TelegramGuardeBot\Workers\Task;
@@ -32,6 +33,11 @@ class Scheduler extends BackgroundProcessWorker implements BackgroundProcessInst
         $this->withSleepSeconds(1);
 
         self::$lastUnserializationTime = 0;
+    }
+
+    public function setUp() : void
+    {
+        App::initialize();
     }
 
     /**
@@ -131,7 +137,7 @@ class Scheduler extends BackgroundProcessWorker implements BackgroundProcessInst
     public function do()
     {
         //Check for invlidation as there may be new tasks not loaded
-        Scheduler::getInstance()->runDueTasks();
+        App::getInstance()->getScheduler()->runDueTasks();
     }
 
     /**

@@ -44,7 +44,8 @@ class GuardeBotTestCase extends TestCase
                 return new GuardeBot($c->get('telegramApi'), $c->get('appConfig')->locale);
             }),
             'telegramApi' => $this->createMock('TelegramGuardeBot\TelegramApi'),
-            'appConfig' => new AppConfig(self::appConfigFileName)
+            'appConfig' => new AppConfig(self::appConfigFileName),
+            'scheduler' => $this->createMock("TelegramGuardeBot\Workers\Scheduler")
         ]);
 
         return $builder->build();

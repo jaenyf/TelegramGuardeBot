@@ -106,12 +106,12 @@ abstract class BackgroundProcessWorker
     /**
      * Override this function with the code the worker has to do before its main work
      */
-    public function setUp() {}
+    public function setUp() : void {}
 
     /**
      * Override this function with the code the worker has to do after its main work
      */
-    public function tearDown() {}
+    public function tearDown() : void {}
 
     /**
      * Return the complete file path of our .proc file
