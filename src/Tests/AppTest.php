@@ -7,21 +7,6 @@ use TelegramGuardeBot\App;
 
 final class AppTest extends GuardeBotTestCase
 {
-    private static function initializeAndGetTestInstance() : App
-    {
-        if(!App::isInitialized())
-        {
-            App::initialize(self::appConfigFileName);
-        }
-
-        return App::getInstance();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        App::dispose();
-    }
-
     /**
      * @group noSetUp
      */
@@ -31,9 +16,6 @@ final class AppTest extends GuardeBotTestCase
         $this->assertThat(App::initialize(self::appConfigFileName), $this->isNull());
     }
 
-    /**
-     * @group noSetUp
-     */
     public function testGetInstanceReturnsAnInstance(): void
     {
         //Act
@@ -43,13 +25,19 @@ final class AppTest extends GuardeBotTestCase
         $this->assertThat($sut, $this->logicalNot($this->isNull()));
     }
 
-    /**
-     * @group noSetUp
-     */
+    public function testGetDIContainerReturnsAnInstance(): void
+    {
+        //Act
+        $tested = App::getInstance()->getDIContainer();
+
+        //Assert
+        $this->assertThat($tested, $this->logicalNot($this->isNull()));
+    }
+
     public function testGetBotReturnsAnInstance(): void
     {
         //Act
-        $sut = static::initializeAndGetTestInstance();
+        $sut = App::getInstance();
 
         //Assert
         $this->assertThat($sut->getBot(), $this->logicalNot($this->isNull()));

@@ -14,6 +14,7 @@ use function DI\factory as DI_factory;
 use TelegramGuardeBot\AppConfig;
 use TelegramGuardeBot\GuardeBot;
 use TelegramGuardeBot\TelegramApi;
+use TelegramGuardeBot\Managers\NewMembersValidationManager;
 
 class DependenciesInitialization
 {
@@ -36,7 +37,9 @@ class DependenciesInitialization
             }),
             'appConfig' => new AppConfig($configFileName),
             //TODO: check DI_factory does not cache getInstance as, it should be called every time because it may get invalidated by new tasks adds/removals
-            'scheduler' => DI_factory("TelegramGuardeBot\Workers\Scheduler::getInstance")
+            'scheduler' => DI_factory("TelegramGuardeBot\Workers\Scheduler::getInstance"),
+            'newMembersValidationManager' => new NewMembersValidationManager()
+
         ]);
 
         return $builder->build();
