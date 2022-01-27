@@ -86,7 +86,7 @@ class NewMemberUpdateHandler extends UpdateHandler
 
             $ejectionTask = new MemberValidationEjectionTask($messageChatId, $newMemberInfo->userId, $sentKeyboardMessage->message_id);
             $ejectionTask->setNextRunTime(time() + $currentSleepTime);
-            Scheduler::getInstance()->addTask($ejectionTask);
+            App::getInstance()->getScheduler()->addTask($ejectionTask);
         }
     }
 }

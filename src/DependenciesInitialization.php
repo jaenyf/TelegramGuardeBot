@@ -22,8 +22,8 @@ class DependenciesInitialization
         $builder = new ContainerBuilder();
 
         if($env === 'prod'){
-            $builder->enableCompilation(__DIR__ . '/tmp');
-            $builder->writeProxiesToFile(true, __DIR__ . '/tmp/proxies');
+            $builder->enableCompilation('./tmp');
+            $builder->writeProxiesToFile(true, './tmp/proxies');
         }
 
         $builder->addDefinitions([
@@ -34,7 +34,9 @@ class DependenciesInitialization
             'telegramApi' => (function(ContainerInterface $c){
                 return new TelegramApi($c->get('appConfig')->botToken, $c->get('appConfig')->enableApiLogging);
             }),
-            'appConfig' => new AppConfig($configFileName)
+            'appConfig' => new AppConfig($configFileName),
+            //TODO: check DI_factory does not cache getInstance as, it should be called every time because it may get invalidated by new tasks adds/removals
+            'scheduler' => DI_factory("TelegramGuardeBot\Workers\Scheduler::getInstance")
         ]);
 
         return $builder->build();

@@ -16,8 +16,6 @@ use TelegramGuardeBot\Actions\MessageActionProcessor;
 use TelegramGuardeBot\UpdateHandlers\CallbackQueryUpdateHandler;
 use TelegramGuardeBot\UpdateHandlers\NewMemberUpdateHandler;
 use TelegramGuardeBot\UpdateHandlers\ChatJoinRequestUpdateHandler;
-use TelegramGuardeBot\Workers\Scheduler;
-
 
 /**
  * GuardeBot Class.
@@ -172,7 +170,7 @@ class GuardeBot
                 throw new \Exception('Failed to set web hook');
             }
 
-            Scheduler::getInstance()->start();
+            App::getInstance()->getScheduler()->start();
 
             //create the hook lock file as all went well:
             $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
@@ -190,7 +188,7 @@ class GuardeBot
             $this->telegram->deleteWebhook($dropPendingUpdates);
         }
 
-        Scheduler::getInstance()->stop();
+        App::getInstance()->getScheduler()->stop();
 
         $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
         if (file_exists($hookFileName)) {

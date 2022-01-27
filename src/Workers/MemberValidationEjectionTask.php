@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TelegramGuardeBot\Workers;
 
 use TelegramGuardeBot\App;
-use TelegramGuardeBot\Workers\Scheduler;
 use TelegramGuardeBot\Workers\MemberValidationTask;
 
 class MemberValidationEjectionTask extends MemberValidationTask
@@ -14,7 +13,7 @@ class MemberValidationEjectionTask extends MemberValidationTask
 
     public function __construct(int $chatId, int $userId, int $validationMessageId)
     {
-        parent::__construct(Scheduler::getInstance(), $chatId, $userId);
+        parent::__construct(App::getInstance()->getScheduler(), $chatId, $userId);
         $this->validationMessageId = $validationMessageId;
     }
 
