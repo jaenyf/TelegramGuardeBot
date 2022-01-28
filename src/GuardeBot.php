@@ -252,7 +252,7 @@ class GuardeBot
             return;
         }
 
-        (new MessageActionProcessor())->process(App::getInstance()->messagesActions, $update);
+        (new MessageActionProcessor())->process(App::getInstance()->getDIContainer()->get('appConfig')->messagesActions, $update);
 
         $this->processUpdate($update);
         $this->setLastHandledUpdateInfo($updateId, time());

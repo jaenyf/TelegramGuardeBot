@@ -11,7 +11,6 @@ use TelegramGuardeBot\Managers\Masters\MastersManager;
 use TelegramGuardeBot\Managers\Spams\SpammersManager;
 use TelegramGuardeBot\Helpers\TelegramHelper;
 use TelegramGuardeBot\UpdateHandlers\UpdateHandler;
-use TelegramGuardeBot\Workers\Scheduler;
 use TelegramGuardeBot\Workers\MemberValidationEjectionTask;
 use TelegramGuardeBot\i18n\GuardeBotMessagesBase;
 
@@ -25,6 +24,7 @@ class NewMemberUpdateHandler extends UpdateHandler
     {
         $this->telegram = $telegram;
     }
+
     public function handle($update, $newMemberInfo = null)
     {
         $messageChatId = $update->chat_member->chat->id;
@@ -37,7 +37,7 @@ class NewMemberUpdateHandler extends UpdateHandler
             App::getInstance()->getLogger()->info("Banning incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo, true) . "' because of blacklist...");
             TelegramHelper::banChatMember($this->telegram, $messageChatId, $newMemberInfo);
         }
-        else if(App::getInstance()->enableNewMemberValidation)
+        else if(App::getInstance()->getDIContainer('appConfig')->enableNewMemberValidation)
         {
             if ($update->chat_member->new_chat_member->status != 'creator')
             {
@@ -64,7 +64,7 @@ class NewMemberUpdateHandler extends UpdateHandler
             $manager->add($messageChatId, $newMemberInfo->userId);
 
             //show validation keyboard button
-            $currentSleepTime = App::getInstance()->newMemberValidationTimeout;
+            $currentSleepTime = App::getInstance()->getDIContainer('appConfig')->newMemberValidationTimeout;
             $authorDisplayName = TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo);
 
             $keyboardMessage = [
