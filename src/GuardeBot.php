@@ -271,6 +271,7 @@ class GuardeBot
      */
     private function processUpdate($update)
     {
+        $this->log($update, 'Received update');
         $message = (isset($update->message) && isset($update->message->text)) ? $update->message->text : '';
 
         $commandText = '';
@@ -279,14 +280,14 @@ class GuardeBot
         if ($this->isCommand($message, $commandText)) {
             $this->log($commandText, 'Processing command ...');
             $this->processCommand($commandText, $update);
+        } else if (TelegramHelper::isCallbackQuery($update, $callbackQuery)) {
+            (new CallbackQueryUpdateHandler($this->telegram))->handle($update, $callbackQuery);
         } else if (TelegramHelper::isNewMemberIncoming($update, $newMember)) {
             (new NewMemberUpdateHandler($this->telegram))->handle($update, $newMember);
         } else if (TelegramHelper::isChatJoinRequest($update, $newMember)) {
             (new ChatJoinRequestUpdateHandler($this->telegram))->handle($update, $newMember);
-        } else if (TelegramHelper::isCallbackQuery($update, $callbackQuery)) {
-            (new CallbackQueryUpdateHandler($this->telegram))->handle($update, $callbackQuery);
         } else {
-            $this->log($update, 'Unkown process update type !');
+            $this->log('Unkown process update type !');
             $spamValidator = new MlSpamTextValidator();
             $isValid = $spamValidator->validate($message);
             if (!$isValid) {

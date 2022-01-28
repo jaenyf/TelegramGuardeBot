@@ -110,7 +110,8 @@ class TelegramHelper
             && isset($update->chat_member->new_chat_member)
             && isset($update->chat_member->new_chat_member->user)
             && isset($update->chat_member->new_chat_member->status)
-            && ($update->chat_member->new_chat_member->status == 'member' || $update->chat_member->new_chat_member->status == 'administrator' || $update->chat_member->new_chat_member->status == 'creator')
+            && (in_array($update->chat_member->new_chat_member->status, ['member', 'administrator', 'creator']))
+            && (!isset($update->chat_member->old_chat_member) || (isset($update->chat_member->old_chat_member) && (!in_array($update->chat_member->old_chat_member->status, ['restricted']))))
         ) {
             return TelegramHelper::tryGetMemberInfoFromStructure($update->chat_member->new_chat_member->user, $newMember);
         }
