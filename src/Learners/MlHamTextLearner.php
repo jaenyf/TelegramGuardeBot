@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot\Learners;
 
+use TelegramGuardeBot\App;
 use TelegramGuardeBot\Estimators\MlSpamTextValidationEstimator;
 use TelegramGuardeBot\Learners\TextValidationLearner;
 use TelegramGuardeBot\Helpers\TextHelper;
@@ -23,7 +24,7 @@ class MlHamTextLearner implements TextValidationLearner
      */
     public function learn(string $text)
     {
-        $languageEstimator = new MlLanguageTextEstimator();
+        $languageEstimator = App::getInstance()->getDIContainer()->get(MlLanguageTextEstimator::class);
         $languageName = $languageEstimator->estimate($text);
         $languageCode = (new ISO639())->code1ByLanguage($languageName);
 

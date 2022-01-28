@@ -51,7 +51,7 @@ class MlSpamTextValidationEstimator implements TextValidationEstimator
             return true;
         }
 
-        $languageEstimator = new MlLanguageTextEstimator();
+        $languageEstimator = App::getInstance()->getDIContainer()->get(MlLanguageTextEstimator::class);
         $languageName = $languageEstimator->estimate($text);
 
         $languageCode = (new ISO639())->code1ByLanguage($languageName);
@@ -80,6 +80,7 @@ class MlSpamTextValidationEstimator implements TextValidationEstimator
         $estimator = new PersistentModel(
             new Pipeline([
                 new StopWordFilter((new StopWords())->getStopWordsFromLanguage($languageCode)),
+                //FIX
                 //new TextNormalizer(), //Causes Uncaught Rubix\ML\Exceptions\RuntimeException: Cannot create vocabulary from tokens given the document frequency constraints on column 0.
                 new WordCountVectorizer(1000000, 0.005, 0.995, new NGram(1, 2)),
                 new BM25Transformer(),

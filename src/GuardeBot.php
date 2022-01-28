@@ -282,11 +282,11 @@ class GuardeBot
         } else if (TelegramHelper::isCallbackQuery($update, $callbackQuery)) {
             (new CallbackQueryUpdateHandler($this->telegram))->handle($update, $callbackQuery);
         } else if(TelegramHelper::hasMessageText($update, $messageText)){
-            $languageEstimator = new MlLanguageTextEstimator();
+            $languageEstimator = App::getInstance()->getDIContainer()->get(MlLanguageTextEstimator::class);
             $language = $languageEstimator->estimate($messageText);
             App::getInstance()->getLogger()->debug("Estimated lang. '".$language."' for message '".$messageText."'");
 
-            $spamValidator = new MlSpamTextValidationEstimator();
+            $spamValidator = App::getInstance()->getDIContainer()->get(MlSpamTextValidationEstimator::class);
             $isValid = $spamValidator->isValid($messageText);
             if (!$isValid) {
                 //this is probably a spam
@@ -352,7 +352,7 @@ class GuardeBot
                         $replyToMessageText = '';
                         if (TelegramHelper::tryGetReplyToMessageText($update, $replyToMessageText))
                         {
-                            $learner = new MlHamTextLearner();
+                            $learner = App::getInstance()->getDIContainer()->get(MlHamTextLearner::class);
                             $learner->learn($replyToMessageText);
 
                             //delete command update message
@@ -376,7 +376,7 @@ class GuardeBot
                         $replyToMessageText = '';
                         if (TelegramHelper::tryGetReplyToMessageText($update, $replyToMessageText))
                         {
-                            $learner = new MlSpamTextLearner();
+                            $learner = App::getInstance()->getDIContainer()->get(MlSpamTextLearner::class);
                             $learner->learn($replyToMessageText);
 
                             //delete command update message

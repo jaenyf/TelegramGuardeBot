@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 namespace TelegramGuardeBot\Actions;
-
+use TelegramGuardeBot\App;
 use TelegramGuardeBot\Learners\MlSpamTextLearner;
 
 /**
@@ -15,7 +15,7 @@ class SpamMessageAction extends MessageAction
 
     public function __construct()
     {
-        $this->spamLearner = new MlSpamTextLearner();
+        $this->spamLearner = App::getInstance()->getDIContainer()->get(MlSpamTextLearner::class);
     }
 
     public function act($messageText) : void

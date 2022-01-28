@@ -52,7 +52,17 @@ class GuardeBotTestCase extends TestCase
             'telegramApi' => $this->createMock(\TelegramGuardeBot\TelegramApi::class),
             'appConfig' => new AppConfig(self::appConfigFileName),
             'scheduler' => $this->createMock(\TelegramGuardeBot\Workers\Scheduler::class),
-            'newMembersValidationManager' => $this->createMock(\TelegramGuardeBot\Managers\NewMembersValidationManager::class)
+            'newMembersValidationManager' => $this->createMock(\TelegramGuardeBot\Managers\NewMembersValidationManager::class),
+            \TelegramGuardeBot\Estimators\MlLanguageTextEstimator::class
+                => $this->createMock(\TelegramGuardeBot\Estimators\MlLanguageTextEstimator::class),
+            \TelegramGuardeBot\Estimators\MlSpamTextValidationEstimator::class
+                => $this->createMock(\TelegramGuardeBot\Estimators\MlSpamTextValidationEstimator::class),
+            \TelegramGuardeBot\Learners\MlHamTextLearner::class
+                => $this->createMock(\TelegramGuardeBot\Learners\MlHamTextLearner::class),
+            \TelegramGuardeBot\Learners\MlSpamTextLearner::class
+                => $this->createMock(\TelegramGuardeBot\Learners\MlSpamTextLearner::class),
+            \TelegramGuardeBot\Learners\MlLanguageTextLearner::class
+                => $this->createMock(\TelegramGuardeBot\Learners\MlLanguageTextLearner::class)
         ]);
 
         return $builder->build();

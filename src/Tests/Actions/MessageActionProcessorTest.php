@@ -7,7 +7,6 @@ use TelegramGuardeBot\Helpers\ArrayHelper;
 
 class MessageActionProcessorTest extends GuardeBotTestCase
 {
-
     private $testMessageTextUpdate;
 
     private const logFileTestName = ".logFileTestName.test";
@@ -22,11 +21,13 @@ class MessageActionProcessorTest extends GuardeBotTestCase
 
     public function tearDown() : void
     {
+        parent::tearDown();
         $this->cleanUp();
     }
 
     public function setUp() : void
     {
+        parent::setUp();
         $this->cleanUp();
 
         $this->testMessageTextUpdate = ArrayHelper::toObject([
