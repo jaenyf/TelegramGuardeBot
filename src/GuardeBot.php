@@ -87,7 +87,49 @@ class GuardeBot
         fclose($file);
     }
 
-    public function approveMember(int $chatId, int $userId)
+    public function muteMember(int $chatId, int $userId) : bool
+    {
+        $chatMember = $this->telegram->getChatMember([
+            'chat_id' => $chatId,
+            'user_id' => $userId
+        ]);
+
+        if (in_array($chatMember->status, ['creator', 'administrator'])) {
+            App::getInstance()->getLogger()->info('Ignoring muting for administrators...', $chatMember);
+            return false;
+        }
+
+        $chat = $this->telegram->getChat([
+            'chat_id' => $chatId
+            ]
+        );
+
+        if($chat->type === 'supergroup')
+        {
+            $this->telegram->restrictChatMember([
+                'chat_id' => $chatId,
+                'user_id' => $userId,
+                'permissions' => [
+                    'can_send_messages' => false,
+                    'can_send_media_messages' => false,
+                    'can_send_polls' => false,
+                    'can_send_other_messages' => false,
+                    'can_add_web_page_previews' => false,
+                    'can_change_info' => false,
+                    'can_invite_users' => false,
+                    'can_pin_messages' => false
+                ]
+            ]);
+            return true;
+        }
+        else
+        {
+            App::getInstance()->getLogger()->info('Ignoring muting for non supergroups...', [$chatMember, $chat]);
+        }
+        return false;
+    }
+
+    public function unmuteMember(int $chatId, int $userId) : bool
     {
         $chatMember = $this->telegram->getChatMember([
             'chat_id' => $chatId,
@@ -95,24 +137,39 @@ class GuardeBot
         ]);
 
         if ($chatMember->status == 'creator' || $chatMember->status == 'administrator') {
-            $this->log($chatMember, 'Ignoring member approval for administrators...');
-            return;
+            App::getInstance()->getLogger()->info('Ignoring unmuting for administrators...', $chatMember);
+            return false;
         }
 
-        $this->telegram->restrictChatMember([
-            'chat_id' => $chatId,
-            'user_id' => $userId,
-            'permissions' => [
-                'can_send_messages' => true,
-                'can_send_media_messages' => true,
-                'can_send_polls' => true,
-                'can_send_other_messages' => true,
-                'can_add_web_page_previews' => true,
-                'can_change_info' => true,
-                'can_invite_users' => true,
-                'can_pin_messages' => true
+        $chat = $this->telegram->getChat([
+            'chat_id' => $chatId
             ]
-        ]);
+        );
+
+        if($chat->type === 'supergroup')
+        {
+            $defaultPermissions = $chat->permissions;
+            $this->telegram->restrictChatMember([
+                'chat_id' => $chatId,
+                'user_id' => $userId,
+                'permissions' => [
+                    'can_send_messages' => $defaultPermissions->can_send_messages,
+                    'can_send_media_messages' => $defaultPermissions->can_send_media_messages,
+                    'can_send_polls' => $defaultPermissions->can_send_polls,
+                    'can_send_other_messages' => $defaultPermissions->can_send_other_messages,
+                    'can_add_web_page_previews' => $defaultPermissions->can_add_web_page_previews,
+                    'can_change_info' => $defaultPermissions->can_change_info,
+                    'can_invite_users' => $defaultPermissions->can_invite_users,
+                    'can_pin_messages' => $defaultPermissions->can_pin_messages
+                ]
+            ]);
+            return true;
+        }
+        else
+        {
+            App::getInstance()->getLogger()->info('Ignoring unmuting for non supergroups...', [$chatMember, $chat]);
+        }
+        return false;
     }
 
     public function ejectMember(int $chatId, int $userId)

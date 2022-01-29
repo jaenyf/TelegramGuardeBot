@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TelegramGuardeBot\Helpers;
 
+use TelegramGuardeBot\TelegramApi;
+
 /**
  * Helper for Telegram Api
  */
@@ -106,14 +108,12 @@ class TelegramHelper
     public static function isNewMemberIncoming($update, &$newMember): bool
     {
         if (
-            isset($update->chat_member)
-            && isset($update->chat_member->new_chat_member)
-            && isset($update->chat_member->new_chat_member->user)
-            && isset($update->chat_member->new_chat_member->status)
-            && (in_array($update->chat_member->new_chat_member->status, ['member', 'administrator', 'creator']))
-            && (!isset($update->chat_member->old_chat_member) || (isset($update->chat_member->old_chat_member) && (!in_array($update->chat_member->old_chat_member->status, ['restricted']))))
+            isset($update->message)
+            && isset($update->message->new_chat_member)
+            && isset($update->message->new_chat_member->id)
+            && !isset($update->message->text)
         ) {
-            return TelegramHelper::tryGetMemberInfoFromStructure($update->chat_member->new_chat_member->user, $newMember);
+            return TelegramHelper::tryGetMemberInfoFromStructure($update->message->new_chat_member, $newMember);
         }
         return false;
     }
@@ -169,6 +169,12 @@ class TelegramHelper
         }
 
         return $displayName;
+    }
+
+    public static function isMe(TelegramApi $telegram, $userId)
+    {
+        $me = $telegram->getMe();
+        return $me->id == $userId;
     }
 
     public static function approveChatJoinRequest($telegram, $chatId, $memberInfo)

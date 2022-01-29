@@ -76,6 +76,11 @@ class TelegramApi
         return TelegramApi::getResultOrThrow($this->api->deleteWebhook($dropPendingUpdates));
     }
 
+    public function getChat(array $content)
+    {
+        return TelegramApi::getResultOrThrow($this->api->getChat($content));
+    }
+
     public function getChatMember(array $content)
     {
         return TelegramApi::getResultOrThrow($this->api->getChatMember($content));

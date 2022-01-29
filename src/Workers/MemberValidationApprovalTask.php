@@ -19,6 +19,6 @@ class MemberValidationApprovalTask extends MemberValidationTask
     {
         App::initialize();
         $this->manager->remove($this->chatId, $this->userId);
-        App::getInstance()->getBot()->approveMember($this->chatId, $this->userId);
+        App::getInstance()->getBot()->unmuteMember($this->chatId, $this->userId);
     }
 }

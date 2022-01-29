@@ -27,7 +27,13 @@ class NewMemberUpdateHandler extends UpdateHandler
     }
     public function handle($update, $newMemberInfo = null)
     {
-        $messageChatId = $update->chat_member->chat->id;
+        $messageChatId = $update->message->chat->id;
+
+        if(TelegramHelper::isMe($this->telegram, $newMemberInfo->userId))
+        {
+            App::getInstance()->getLogger()->debug("Ignoring Incoming member (me) '" . TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo, true) . "'...");
+            return;
+        }
 
         App::getInstance()->getLogger()->info("Incoming member '" . TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo, true) . "'...");
 
@@ -39,59 +45,53 @@ class NewMemberUpdateHandler extends UpdateHandler
         }
         else if(App::getInstance()->enableNewMemberValidation)
         {
+            App::getInstance()->getLogger()->info("Processing incoming member validation for '" . TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo, true) . "'...");
+
             //register pending new member validation
             $manager = new NewMembersValidationManager();
 
             //Check we do not reprocess a pending validation, as telegram may send multiple similar requests
             if(!$manager->has($messageChatId, $newMemberInfo->userId))
             {
+                $muteSucceeded = App::getInstance()->getBot()->muteMember($messageChatId, $newMemberInfo->userId);
 
-                if ($update->chat_member->new_chat_member->status != 'creator')
+                if($muteSucceeded)
                 {
-                    //restrict user
-                    $this->telegram->restrictChatMember([
+                    $manager->add($messageChatId, $newMemberInfo->userId);
+
+                    //show validation keyboard button
+                    $currentSleepTime = App::getInstance()->newMemberValidationTimeout;
+                    $authorDisplayName = TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo);
+
+                    $keyboardMessage = [
                         'chat_id' => $messageChatId,
-                        'user_id' => $newMemberInfo->userId,
-                        'until_date' => time() + 30,
-                        'permissions' => [
-                            'can_send_messages' => false,
-                            'can_send_media_messages' => false,
-                            'can_send_polls' => false,
-                            'can_send_other_messages' => false,
-                            'can_add_web_page_previews' => false,
-                            'can_change_info' => false,
-                            'can_invite_users' => false,
-                            'can_pin_messages' => false
-                        ]
-                    ]);
+                        'text' => GuardeBotMessagesBase::get(GuardeBotMessagesBase::NEW_MEMBER_VALIDATION_MARKDOWN_GREETINGS, [$authorDisplayName, $newMemberInfo->userId, $currentSleepTime]),
+                        'parse_mode' => 'MarkdownV2',
+                        'has_protected_content' => true,
+                        'reply_markup' => json_encode([
+                            'inline_keyboard' => [[
+                                [
+                                    'text' => GuardeBotMessagesBase::get(GuardeBotMessagesBase::NEW_MEMBER_VALIDATION_BUTTON_TEXT),
+                                    'callback_data' => 'MemberValidationClick|' . $newMemberInfo->userId . '|' . time() . '|' . $currentSleepTime
+                                ],
+                            ]]
+                        ])
+                    ];
+
+                    $sentKeyboardMessage = $this->telegram->sendMessage($keyboardMessage);
+
+                    $ejectionTask = new MemberValidationEjectionTask($messageChatId, $newMemberInfo->userId, $sentKeyboardMessage->message_id);
+                    $ejectionTask->setNextRunTime(time() + $currentSleepTime);
+                    Scheduler::getInstance()->addTask($ejectionTask);
                 }
-
-                $manager->add($messageChatId, $newMemberInfo->userId);
-
-                //show validation keyboard button
-                $currentSleepTime = App::getInstance()->newMemberValidationTimeout;
-                $authorDisplayName = TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo);
-
-                $keyboardMessage = [
-                    'chat_id' => $messageChatId,
-                    'text' => GuardeBotMessagesBase::get(GuardeBotMessagesBase::NEW_MEMBER_VALIDATION_MARKDOWN_GREETINGS, [$authorDisplayName, $newMemberInfo->userId, $currentSleepTime]),
-                    'parse_mode' => 'MarkdownV2',
-                    'has_protected_content' => true,
-                    'reply_markup' => json_encode([
-                        'inline_keyboard' => [[
-                            [
-                                'text' => GuardeBotMessagesBase::get(GuardeBotMessagesBase::NEW_MEMBER_VALIDATION_BUTTON_TEXT),
-                                'callback_data' => 'MemberValidationClick|' . $newMemberInfo->userId . '|' . time() . '|' . $currentSleepTime
-                            ],
-                        ]]
-                    ])
-                ];
-
-                $sentKeyboardMessage = $this->telegram->sendMessage($keyboardMessage);
-
-                $ejectionTask = new MemberValidationEjectionTask($messageChatId, $newMemberInfo->userId, $sentKeyboardMessage->message_id);
-                $ejectionTask->setNextRunTime(time() + $currentSleepTime);
-                Scheduler::getInstance()->addTask($ejectionTask);
+                else
+                {
+                    App::getInstance()->getLogger()->info("Discarding processing incoming member validation for '" . TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo, true) . "' because of unsuccessful mute");
+                }
+            }
+            else
+            {
+                App::getInstance()->getLogger()->info("Discarding processing incoming member validation for '" . TelegramHelper::getBestMessageAuthorDisplayName($newMemberInfo, true) . "' because it is already in progress ...");
             }
         }
     }
