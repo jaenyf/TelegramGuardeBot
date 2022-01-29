@@ -30,11 +30,16 @@ class MlSpamTextValidator implements TextValidator
             return true;
         }
 
-        $estimator = PersistentModel::load(new Filesystem('spamestimator.rbx'));
+        if(file_exists('spamestimator.rbx'))
+        {
+            $estimator = PersistentModel::load(new Filesystem('spamestimator.rbx'));
 
-        $dataset = new Unlabeled([$text]);
-        $prediction = $estimator->predict($dataset);
-
-        return $prediction[0] == "ham";
+            $dataset = new Unlabeled([$text]);
+            $prediction = $estimator->predict($dataset);
+    
+            return $prediction[0] == "ham";
+        }
+        
+        return true;
     }
 }
