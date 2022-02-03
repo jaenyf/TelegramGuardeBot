@@ -7,6 +7,7 @@ namespace TelegramGuardeBot\Validators;
 use TelegramGuardeBot\Validators\TextValidator;
 
 use TelegramGuardeBot\Helpers\TextHelper;
+use TelegramGuardeBot\Helpers\MemoryHelper;
 
 use Rubix\ML\Datasets\Unlabeled;
 use Rubix\ML\PersistentModel;
@@ -32,14 +33,18 @@ class MlSpamTextValidator implements TextValidator
 
         if(file_exists('spamestimator.rbx'))
         {
+            MemoryHelper::storeAndSetMemoryLimit("-1");
+
             $estimator = PersistentModel::load(new Filesystem('spamestimator.rbx'));
 
             $dataset = new Unlabeled([$text]);
             $prediction = $estimator->predict($dataset);
-    
+
+            MemoryHelper::restoreMemoryLimit();
+
             return $prediction[0] == "ham";
         }
-        
+
         return true;
     }
 }

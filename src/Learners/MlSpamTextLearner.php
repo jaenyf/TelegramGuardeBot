@@ -6,6 +6,7 @@ namespace TelegramGuardeBot\Learners;
 
 use TelegramGuardeBot\Learners\TextValidationLearner;
 use TelegramGuardeBot\Helpers\TextHelper;
+use TelegramGuardeBot\Helpers\MemoryHelper;
 
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\PersistentModel;
@@ -37,11 +38,15 @@ class MlSpamTextLearner implements TextValidationLearner
             self::createEstimatorFile();
         }
 
+        MemoryHelper::storeAndSetMemoryLimit("-1");
+
         $estimator = PersistentModel::load(new Filesystem(self::estimatorFileName));
 
         $simpleDataset =  Labeled::build([$text], ["spam"]);
         $estimator->partial($simpleDataset);
         $estimator->save();
+
+        MemoryHelper::restoreMemoryLimit();
     }
 
     public static function createEstimatorFile() : void

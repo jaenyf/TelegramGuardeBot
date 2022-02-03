@@ -7,6 +7,7 @@ namespace TelegramGuardeBot\Learners;
 use TelegramGuardeBot\Learners\TextValidationLearner;
 
 use TelegramGuardeBot\Helpers\TextHelper;
+use TelegramGuardeBot\Helpers\MemoryHelper;
 
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\PersistentModel;
@@ -24,10 +25,14 @@ class MlHamTextLearner implements TextValidationLearner
 
         file_put_contents("hams.learning.lst", json_encode($text).PHP_EOL, FILE_APPEND | LOCK_EX);
 
+        MemoryHelper::storeAndSetMemoryLimit("-1");
+
         $estimator = PersistentModel::load(new Filesystem('spamestimator.rbx'));
 
         $simpleDataset =  Labeled::build([$text], ["ham"]);
         $estimator->partial($simpleDataset);
         $estimator->save();
+
+        MemoryHelper::restoreMemoryLimit();
     }
 }
