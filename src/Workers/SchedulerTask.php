@@ -2,7 +2,7 @@
 
 namespace TelegramGuardeBot\Workers;
 
-use TelegramGuardeBot\Workers\Scheduler;
+use TelegramGuardeBot\App;
 use TelegramGuardeBot\Workers\Task;
 use TelegramGuardeBot\Workers\BackgroundProcessInstanciator;
 
@@ -16,9 +16,14 @@ abstract class SchedulerTask extends Task
         parent::__construct($instanciator);
     }
 
-    public function tearDown()
+    public function setUp() : void
     {
-        Scheduler::getInstance()->removeTaskById($this->getUid());
+        App::initialize();
+    }
+
+    public function tearDown() : void
+    {
+        App::getInstance()->getScheduler()->removeTaskById($this->getUid());
     }
 
 }

@@ -16,8 +16,6 @@ use TelegramGuardeBot\Actions\MessageActionProcessor;
 use TelegramGuardeBot\UpdateHandlers\CallbackQueryUpdateHandler;
 use TelegramGuardeBot\UpdateHandlers\NewMemberUpdateHandler;
 use TelegramGuardeBot\UpdateHandlers\ChatJoinRequestUpdateHandler;
-use TelegramGuardeBot\Workers\Scheduler;
-
 
 /**
  * GuardeBot Class.
@@ -33,7 +31,6 @@ class GuardeBot
 
     private TelegramApi $telegram;
     private $webHookUniqueName = null;
-    private int $logChatId;
 
     /**
      * Create a GuardeBot instance
@@ -44,15 +41,13 @@ class GuardeBot
      */
     public function __construct(
         TelegramApi $telegramApi,
-        string $webHookUniqueName,
-        int $logChatId
+        string $webHookUniqueName
     ) {
         $this->webHookUniqueName = trim(isset($webHookUniqueName) ? $webHookUniqueName : '');
         if ($this->webHookUniqueName === '') {
             throw new \Exception('WebHook unique name has to be defined');
         }
         $this->telegram = $telegramApi;
-        $this->logChatId = $logChatId;
     }
 
     private function deriveWebHookUniqueFilename($baseFilename)
@@ -232,7 +227,7 @@ class GuardeBot
                 throw new \Exception('Failed to set web hook');
             }
 
-            Scheduler::getInstance()->start();
+            App::getInstance()->getScheduler()->start();
 
             //create the hook lock file as all went well:
             $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
@@ -250,7 +245,7 @@ class GuardeBot
             $this->telegram->deleteWebhook($dropPendingUpdates);
         }
 
-        Scheduler::getInstance()->stop();
+        App::getInstance()->getScheduler()->stop();
 
         $hookFileName = $this->deriveWebHookUniqueFilename(self::WEBHOOK_LOCK_FILENAME);
         if (file_exists($hookFileName)) {
@@ -314,7 +309,7 @@ class GuardeBot
             return;
         }
 
-        (new MessageActionProcessor())->process(App::getInstance()->messagesActions, $update);
+        (new MessageActionProcessor())->process(App::getInstance()->getDIContainer()->get('appConfig')->messagesActions, $update);
 
         $this->processUpdate($update);
         $this->setLastHandledUpdateInfo($updateId, time());

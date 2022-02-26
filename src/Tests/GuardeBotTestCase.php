@@ -9,14 +9,14 @@ require_once 'src/Requires.php';
 use PHPUnit\Framework\TestCase;
 use DI\Container;
 use DI\ContainerBuilder;
+
 use TelegramGuardeBot\App;
+use TelegramGuardeBot\AppConfig;
 
 class GuardeBotTestCase extends TestCase
 {
     protected const appConfigFileName = "app.config.ci";
 
-    private static $isAppInitialized;
-    private static $logStub;
 
     protected function setUp() : void
     {
@@ -25,21 +25,28 @@ class GuardeBotTestCase extends TestCase
             return;
         }
 
-        if(!isset(self::$isAppInitialized))
+        if(!App::isInitialized())
         {
-            self::$logStub = $this->createMock('Psr\Log\LoggerInterface');
-            App::initialize(self::appConfigFileName, $this->InitializeContainer());
-            self::$isAppInitialized = true;
+            App::initialize(self::appConfigFileName, $this->InitializeContainerWithMocks());
         }
     }
 
+    protected function tearDown(): void
+    {
+        App::dispose();
+    }
 
-    public function InitializeContainer() : Container
+    protected function InitializeContainerWithMocks() : Container
     {
         $builder = new ContainerBuilder();
 
         $builder->addDefinitions([
-            'logger' => self::$logStub
+            'logger' => $this->createMock(\Psr\Log\LoggerInterface::class),
+            'bot' => $this->createMock(\TelegramGuardeBot\GuardeBot::class),
+            'telegramApi' => $this->createMock(\TelegramGuardeBot\TelegramApi::class),
+            'appConfig' => new AppConfig(self::appConfigFileName),
+            'scheduler' => $this->createMock(\TelegramGuardeBot\Workers\Scheduler::class),
+            'newMembersValidationManager' => $this->createMock(\TelegramGuardeBot\Managers\NewMembersValidationManager::class)
         ]);
 
         return $builder->build();

@@ -19,7 +19,7 @@ final class GuardeBotTest extends GuardeBotTestCase
         $telegramApiStub = $this->createStub(TelegramApi::class);
 
         //Act / Assert
-        new GuardeBot($telegramApiStub, (string)null, GuardeBotTest::logChatTestId);
+        new GuardeBot($telegramApiStub, (string)null);
     }
 
     public function testCannotBeCreatedFromEmptyHookName(): void

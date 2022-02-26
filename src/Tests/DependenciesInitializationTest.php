@@ -10,12 +10,18 @@ final class DependenciesInitializationTest extends TestCase
     private $container;
     protected function setUp(): void
     {
-        $this->container = DependenciesInitialization::InitializeContainer();
+        $this->container = DependenciesInitialization::InitializeContainer('app.config.ci', 'dev');
     }
 
-    public function testGetLoggerInstanceRetrieveMonologLogger(): void
+    public function testGetLogger(): void
     {
         $logger = $this->container->get('logger');
         $this->assertInstanceOf("Monolog\Logger", $logger);
+    }
+
+    public function testGetNewMembersValidationManager(): void
+    {
+        $manager = $this->container->get('newMembersValidationManager');
+        $this->assertInstanceOf("TelegramGuardeBot\Managers\NewMembersValidationManager", $manager);
     }
 }
