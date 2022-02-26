@@ -36,7 +36,7 @@ class MemberValidationApprovalTaskTest extends GuardeBotTestCase
 
         App::getInstance()->getDIContainer()->get('bot')
             ->expects($this->once())
-            ->method('approveMember')
+            ->method('unmuteMember')
             ->with($this->equalTo($chatId, $userId));
 
         //Act / Assert
